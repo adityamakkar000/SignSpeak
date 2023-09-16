@@ -45,36 +45,33 @@ while True:
 distance_arr = []
 
 for i in range(0,len(letter_dictionary)):
-  distance_arr.append(0)
+  distance_arr.append([0,0])
 
-power = 2
 
-for i in range(0, len(final_arr)):
-  for j in letter_dictionary:
+# create empyt dictionary
+letter_distance = dict()
+
+for j in letter_dictionary:
     letter = letter_dictionary[j]
     time_arr = letter[i]
-    distance_arr[list(letter_dictionary).index(j)] += pow(
-    (pow(abs(final_arr[i][0] - time_arr[0]),power)
-    + pow(abs(final_arr[i][1] - time_arr[1]),power)
-    + pow(abs(final_arr[i][2] - time_arr[2]),power)
-    + pow(abs(final_arr[i][3] - time_arr[3]),power)
-    + pow(abs(final_arr[i][4] - time_arr[4]),power)), (1/power)
-    )
+    hand_1 = 0
+    hand_2 = 0
+    for i in range(0,5):
+      power = 3*i
+      hand_1 += pow(10, power) * time_arr[i]
+      hand_2 += pow(10, power) * time_arr[i+5]
+    letter_distance[j] = [hand_1, hand_2]
+
+print(letter_distance)
+
+for i in range(0, len(final_arr)):
+  print(final_arr[i])
+  for j in range(0,5):
+      power = 3*j
+      hand_1 += pow(10, power) * time_arr[j]
+      hand_2 += pow(10, power) * time_arr[j+5]
+    distance_arr[j] = [hand_1, hand_2]
+    # put in dictionary Let
 
 
-min_dis = 1000000000000
-min_index = -1
 
-for i in range(0,len(distance_arr)):
-  if(distance_arr[i] < min_dis):
-    min_dis = distance_arr[i]
-    min_index = i
-
-index_to_dictionary = list(letter_dictionary)[min_index]
-print(index_to_dictionary)
-
-text = TextToSpeech()
-text.convert_and_play(index_to_dictionary)
-
-print(min_index)
-print(distance_arr)
