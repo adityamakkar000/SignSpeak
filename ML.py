@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-
+import pymongo
+import serial
 # Define the TDNN model
 class TDNN(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -39,8 +40,21 @@ model = TDNN(input_dim, output_dim)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-# Sample input data (adjust as needed)
-input_data = torch.randn(10, input_dim)  # 10 samples, each with 60 features
+# connect and setup mongodb database
+client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
+db = client['cluster0']
+collection = db[('new_letters')]
+
+def get_letter_dict():
+    cursor = collection.find()
+    data = list(cursor)
+    letters = [entry["word"] for entry in data]
+    resistance_values = [entry["hand"] for entry in data]
+    letter_dict = dict(zip(letters, resistance_values))
+    return letter_dict
+
+letter_dictionary = get_letter_dict()
+input_data = letter_dictionary
 
 # Forward pass
 output = model(input_data)
@@ -49,14 +63,10 @@ output = model(input_data)
 target = torch.randn(10, output_dim)  # Example target values (adjust as needed)
 loss = criterion(output, target)
 
-epochs = 5
-
-for i in range(epochs):
-    # Backpropagation and optimization
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    
+# Backpropagation and optimization
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()
 
 # Make predictions (for new input data)
 new_input_data = torch.randn(5, input_dim)  # 5 new samples
