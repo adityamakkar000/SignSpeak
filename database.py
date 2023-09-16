@@ -8,7 +8,7 @@ db = client['cluster0']
 collection = db[('letters_htn')]
 
 # average to smooth out data
-averageRun = 10
+averageRun = 2
 
 def insert_data(data):
   if collection.count_documents({"word": data["word"]}) == 0: # if word does not exist in database
@@ -29,7 +29,7 @@ while True:
         arr = list(map(int, a.split(' ')))
         for i in range(0,len(res_arr)):
           res_arr[i] += arr[i]
-    for i in range(0,5):
+    for i in range(0,len(res_arr)):
       res_arr[i] = res_arr[i]/averageRun
     print(res_arr)
     final_arr.append(res_arr)
