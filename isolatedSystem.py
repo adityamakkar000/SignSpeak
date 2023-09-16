@@ -21,7 +21,7 @@ ser = serial.Serial('COM5', 9600)
 def get_letter_dict():
   cursor = collection.find()
   data = list(cursor)
-  letters = [entry["word"] for entry in data]c b 
+  letters = [entry["word"] for entry in data]
   resistance_values = [entry["hand"] for entry in data]
   letter_dict = dict(zip(letters, resistance_values))
   return letter_dict

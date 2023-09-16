@@ -5,14 +5,13 @@ import os
 # connect and setup mongodb database
 client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
 db = client['cluster0']
-collection = db[('letters_htn')]
+collection = db[('RNN_database')]
 
 # average to smooth out data
 averageRun = 2
 
 def insert_data(data):
-  if collection.count_documents({"word": data["word"]}) == 0: # if word does not exist in database
-    collection.insert_one(data)
+  collection.insert_one(data)
 
 ser = serial.Serial('COM5', 9600)
 
@@ -35,7 +34,17 @@ while True:
     final_arr.append(res_arr)
   except KeyboardInterrupt:
     word = input("Enter a word: ")
+    removed_arr = []
+    for i in final_arr:
+      sum = 0
+      for j in i:
+        sum += j
+      if sum >= 9700:
+        removed_arr.append(i)
+    for i in removed_arr:
+      final_arr.remove(i)
     data = {"word": word, "hand": final_arr}
+    print(data)
     insert_data(data)
     key = 'b'
     break
