@@ -6,10 +6,10 @@ import math
 
 client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
 db = client['cluster0']
-collection = db[('new_letters')]
+collection = db[('letters_htn')]
 
 averageRun = 10
-ser = serial.Serial('COM3', 9600)
+ser = serial.Serial('COM5', 9600)
 
 def get_letter_dict():
     cursor = collection.find()
@@ -26,7 +26,7 @@ wait_input = input()
 final_arr = []
 while True:
   try:
-    res_arr = [0,0,0,0,0]
+    res_arr = [0,0,0,0,0,0,0,0,0,0]
     for i in range(0, averageRun):
       line = ser.readline().decode('utf-8').strip()  # Read a line of text from the serial port
       if line:  # Check if the line is not empty
@@ -34,7 +34,7 @@ while True:
             # print(a)
             #covert string to integer array
         arr = list(map(int, a.split(' ')))
-        for i in range(0,5):
+        for i in range(0,len(res_arr)):
           res_arr[i] += arr[i]
     for i in range(0,5):
       res_arr[i] = res_arr[i]/averageRun
