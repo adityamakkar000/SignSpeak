@@ -9,7 +9,7 @@ class TextToSpeech:
     def convert_and_play(self, text):
         if not text:
             print("No text to speak.")
-            return
+            returngit
 
         # Convert text to speech
         tts = gTTS(text)
