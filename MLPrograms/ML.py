@@ -8,23 +8,23 @@ class TDNN(nn.Module):
         super(TDNN, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
-        
+
         # Define layers
         self.tdnn_layer = nn.Linear(input_dim, 60)
         self.hidden_layer1 = nn.Linear(60, 60)
         self.hidden_layer2 = nn.Linear(60, 70)
         self.output_layer = nn.Linear(70, output_dim)
-        
+
     def forward(self, x):
         # Apply TDNN layer
         x = torch.relu(self.tdnn_layer(x))
-        
+
         # Apply first hidden layer
         x = torch.relu(self.hidden_layer1(x))
-        
+
         # Apply second hidden layer
         x = torch.relu(self.hidden_layer2(x))
-        
+
         # Apply output layer
         x = self.output_layer(x)
         return x
@@ -40,8 +40,8 @@ model = TDNN(input_dim, output_dim)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-# connect and setup mongodb database
-client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
+#
+client = pymongo.MongoClient("database/")
 db = client['cluster0']
 collection = db[('new_letters')]
 

@@ -2,14 +2,21 @@ import serial
 import pymongo
 from Text import TextToSpeech
 import tensorflow as tf
+import numpy as np
+import pandas as pd
 
-
-loaded_model = tf.saved_model.load('RNN_model')
+loaded_model = tf.keras.models.load_model('RNN_model.keras')
+print(loaded_model.summary())
 tts = TextToSpeech()
 
-client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
-db = client['cluster0']
-collection = db[('letters_average')]
+client = pymongo.MongoClient("database/")
+collection = db[('new_RNN_database')]
+
+words = []
+
+for entry in collection.find():
+  if entry["word"] not in words:
+    words.append(entry["word"])
 
 
 def difference_between_arrays(arr1, arr2):
@@ -33,47 +40,71 @@ letter_dictionary = get_letter_dict()
 
 
 state = False
-stop_amount = 20
+stop_amount = 8
 
 while True:
 
   while state == False:
-
+    print("off ")
     line = ser.readline().decode('utf-8').strip()
     a = line
     arr = list(map(int,a.split(' ')))
     sum = 0
     for i in arr:
       sum += i
-    if sum < 9700:
+    if sum < 9500:
       state = True
 
 
   while state == True:
+
     count = 0
     final_arr = []
     while count < stop_amount:
-      line = ser.readline().decode('utf-8').strip()
-      a = line
-      arr = list(map(int,a.split(' ')))
+      print("on")
+      average_reading = [0,0,0,0,0,0,0,0,0,0]
+      res_arr = [0,0,0,0,0,0,0,0,0,0]
+
+      for i in range(0,averageRun):
+          line = ser.readline().decode('utf-8').strip()
+          if line:
+            a = line
+            arr = list(map(int,a.split(' ')))
+            # print(arr)
+            for i in range(0,10):
+              average_reading[i] += arr[i]
+      for i in range(0,10):
+        res_arr[i] = average_reading[i]/averageRun
       sum = 0
-      for i in arr:
+      print(res_arr)
+
+      for i in res_arr:
         sum += i
-      if sum >= 9700:
+      print(sum)
+      if sum >= 9500:
         count += 1
       else:
-        final_arr.append(arr)
+        final_arr.append(res_arr)
+      print(count)
 
-    prediction_array = loaded_model.predict(final_arr)[0]
-    min_val = 0
-    index = -1
-    for i in range(0,len(prediction_array)):
-      if prediction_array[i] > min_val:
-        min_val = prediction_array[i]
-        index = i
+      unitary = [0,0,0,0,0,0,0,0,0,0]
+      diff = 21 - len(final_arr)
+      for i in range(0, diff):
+        final_arr.append(unitary)
 
+    test_array = np.array([final_arr])
+    prediction_array = loaded_model(test_array)
+    print(prediction_array)
+    # min_val = 0
+    # index = -1
+    # for i in range(0,len(prediction_array)):
+    #   if prediction_array[i] > min_val:
+    #     min_val = prediction_array[i]
+    #     index = i
 
-    print("stop")
+    # word = words[index]
+    # tts.convert_and_play(word)
+    # print("stop")
     state = False
 
 
