@@ -35,7 +35,7 @@ while True:
         arr = list(map(int, a.split(' ')))
         for i in range(0,len(res_arr)):
           res_arr[i] += arr[i]
-    for i in range(0,5):
+    for i in range(0,len(res_arr)):
       res_arr[i] = res_arr[i]/averageRun
     print(res_arr)
     final_arr.append(res_arr)
@@ -51,27 +51,64 @@ for i in range(0,len(letter_dictionary)):
 # create empyt dictionary
 letter_distance = dict()
 
-for j in letter_dictionary:
-    letter = letter_dictionary[j]
-    time_arr = letter[i]
-    hand_1 = 0
-    hand_2 = 0
-    for i in range(0,5):
-      power = 3*i
-      hand_1 += pow(10, power) * time_arr[i]
-      hand_2 += pow(10, power) * time_arr[i+5]
-    letter_distance[j] = [hand_1, hand_2]
+# create a for loop put every element in letter dictionary and an empty array
+for i in letter_dictionary:
+  letter_distance[i] = [0,0]
 
 print(letter_distance)
 
+for j in letter_dictionary:
+    letter = letter_dictionary[j]
+    for i in range(0,len(letter)):
+      time_arr = letter[i]
+      hand_1 = 0
+      hand_2 = 0
+      # print(time_arr)
+      for k in range(0,5):
+        power = 5*k
+        hand_1 += pow(10, power) * time_arr[k]
+        hand_2 += pow(10, power) * time_arr[k+5]
+      letter_distance[j][0] += hand_1
+      letter_distance[j][1] += hand_2
+
+print(letter_distance)
+
+
+sequence_distance = [0,0]
+
 for i in range(0, len(final_arr)):
-  print(final_arr[i])
+  instant_array = final_arr[i]
   for j in range(0,5):
-      power = 3*j
-      hand_1 += pow(10, power) * time_arr[j]
-      hand_2 += pow(10, power) * time_arr[j+5]
-    distance_arr[j] = [hand_1, hand_2]
+      power = 5*j
+      hand_1 += pow(10, power) * instant_array[j]
+      hand_2 += pow(10, power) * instant_array[j+5]
+  sequence_distance[0] += hand_1
+  sequence_distance[1] += hand_2
+  # print()
     # put in dictionary Let
+
+p = 2
+
+hand_one = sequence_distance[0]
+hand_two = sequence_distance[1]
+
+for i in letter_distance:
+  index = list(letter_distance).index(i)
+  distances_for_letter = letter_distance[i]
+  distance_arr[index] = pow(pow(abs(distances_for_letter[0]-hand_1),2) + pow(abs(distances_for_letter[1]-hand_2),2) ,1/2)
+
+min_dis = 10000000000000000000000000000000000000000000000000000000000000000
+min_index = -1
+for i in range(0,len(distance_arr)):
+  if(distance_arr[i] < min_dis):
+    min_dis = distance_arr[i]
+    min_index = i
+
+index_to_dictionary = list(letter_dictionary)[min_index]
+
+
+print(min_index)
+print(distance_arr)
 
 
 
