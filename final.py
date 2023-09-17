@@ -1,6 +1,11 @@
 import serial
 import pymongo
 from Text import TextToSpeech
+import tensorflow as tf
+
+
+loaded_model = tf.saved_model.load('RNN_model')
+tts = TextToSpeech()
 
 client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
 db = client['cluster0']
@@ -59,8 +64,15 @@ while True:
       else:
         final_arr.append(arr)
 
-    # use prediction then
-    #
+    prediction_array = loaded_model.predict(final_arr)[0]
+    min_val = 0
+    index = -1
+    for i in range(0,len(prediction_array)):
+      if prediction_array[i] > min_val:
+        min_val = prediction_array[i]
+        index = i
+
+
     print("stop")
     state = False
 
