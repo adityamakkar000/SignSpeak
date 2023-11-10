@@ -4,19 +4,10 @@ import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-mapping = {'hello': np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-           'a': np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
-           's': np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
-           'l': np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
-           'speech': np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
-           'this': np.array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
-           'recognition': np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
-           'yes': np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-           'no': np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
-           'wrong': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1])}
+mapping = {}
 
 
-data = pandas.read_csv('./cluster0.new_RNN_database_3.csv')
+data = pandas.read_csv('')
 words = data['word']
 
 y = data['word']

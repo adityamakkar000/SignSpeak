@@ -4,7 +4,7 @@ import os
 import math
 from Text import TextToSpeech
 
-client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
+client = pymongo.MongoClient("database/")
 db = client['cluster0']
 collection = db[('letters_htn')]
 

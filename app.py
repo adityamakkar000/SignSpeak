@@ -5,12 +5,20 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 
+<<<<<<< HEAD:app.py
 loaded_model = tf.keras.models.load_model('RNN_model_new_4.keras')
 print(loaded_model.summary())
 tts = TextToSpeech()
 
 client = pymongo.MongoClient("mongodb+srv://blueishfiend692:EBqcMyVksJPcK2QA@cluster0.so0ju7f.mongodb.net/")
 db = client['cluster0']
+=======
+loaded_model = tf.keras.models.load_model('RNN_model.keras')
+print(loaded_model.summary())
+tts = TextToSpeech()
+
+client = pymongo.MongoClient("database/")
+>>>>>>> e278c16ed44bd4c787730812fa4135426b066e28:final.py
 collection = db[('new_RNN_database')]
 
 words = []
@@ -42,8 +50,11 @@ letter_dictionary = get_letter_dict()
 
 state = False
 stop_amount = 8
+<<<<<<< HEAD:app.py
 
 
+=======
+>>>>>>> e278c16ed44bd4c787730812fa4135426b066e28:final.py
 
 while True:
 
