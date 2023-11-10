@@ -52,10 +52,7 @@ class CustomImageDataset():
                     selected_rows_2.append(selected_columns_2)
                     count += 1
         # pad self.x from the selcted rows
-        self.x = torch.nn.utils.rnn.pad_sequence(selected_rows, batch_first=True, padding_value=0).data
-        print(self.x.shape)
-        print(type(self.x))
-
+        self.x = torch.nn.utils.rnn.pack_padded_sequence(torch.nn.utils.rnn.pad_sequence(selected_rows, batch_first=True, padding_value=0), lengths, batch_first=True, enforce_sorted=False).data
         self.y = selected_rows_2
 
     def __len__(self):
@@ -73,15 +70,10 @@ dataloader = torch.utils.data.DataLoader(modified_data, batch_size=1, shuffle=Fa
 print(modified_data.x.__len__())
 print(modified_data.y.__len__())
 
-# for batch in dataloader:
-#     print(batch)
-
-
-# # define any number of nn.Modules (or use your current ones)
 encoder = nn.RNN(10, 64, 2)
 decoder = nn.Sequential(nn.Linear(64, 32), nn.ReLU(), nn.Linear(64, 15), nn.Softmax())
 
-# define the LightningModule
+
 class LitAutoEncoder(pl.LightningModule):
     def __init__(self, encoder, decoder):
         super().__init__()
@@ -89,14 +81,12 @@ class LitAutoEncoder(pl.LightningModule):
         self.decoder = decoder
 
     def training_step(self, batch, batch_idx):
-        # training_step defines the train loop.
-        # it is independent of forward
+
         x, y = batch
         x = x.view(x.size(0), -1)
         z = self.encoder(x)
         x_hat = self.decoder(z)
         loss = nn.functional.mse_loss(x_hat, x)
-        # Logging to TensorBoard (if installed) by default
         self.log("train_loss", loss)
         return loss
 
