@@ -4,37 +4,47 @@ import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-mapping = {}
+
+mapping = {'hello': np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+           'a': np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
+           's': np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
+           'l': np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
+           'speech': np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
+           'this': np.array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
+           'recognition': np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
+           'yes': np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
+           'no': np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
+           'wrong': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1])}
 
 
-data = pandas.read_csv('')
+# y:shape: (205,10) / (900,9)
+# x = x[:,:250].reshape(205,10,25)
+# hand[25][9]
+# 205 rows × 259 columns
+
+data = pandas.read_csv('./cluster0.new_RNN_database_3.csv')
 words = data['word']
 
 y = data['word']
 x = data.iloc[:,3:]
-
 data.iloc[:,3:]
-
-
 y = np.concatenate([[mapping[i] for i in y]])
 
 print(y.shape)
 
 x = x.to_numpy()
-
 x = x[:,:250].reshape(205, 10, 25)
 x = x.transpose(0, 2, 1)
-
 x = np.nan_to_num(x)
+
 print(x.shape)
 
 
 encoder = models.Sequential([
-    layers.LSTM(64, return_sequences=True, input_shape=(None, 10)),
-    layers.LSTM(64)
+    layers.SimpleRNN(64, return_sequences=True, input_shape=(None, 10)),
+    layers.SimpleRNN(64)
 ])
 encoder.summary()
-
 
 decoder = models.Sequential([
     layers.Dense(32, activation='relu', input_shape=(64,)),
@@ -47,10 +57,7 @@ autoencoder = models.Sequential([
     encoder,
     decoder
 ])
-
-
 autoencoder.summary()
-
 autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
 batch_size = 3

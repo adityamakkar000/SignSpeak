@@ -5,7 +5,7 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 
-loaded_model = tf.keras.models.load_model('RNN_model_new_4.keras')
+loaded_model = tf.keras.models.load_model('EETrainedModel.keras')
 print(loaded_model.summary())
 tts = TextToSpeech()
 
@@ -42,8 +42,6 @@ letter_dictionary = get_letter_dict()
 
 state = False
 stop_amount = 8
-
-
 
 while True:
 
@@ -109,12 +107,3 @@ while True:
     tts.convert_and_play(word)
     print("stop")
     state = False
-
-
-
-
-
-
-
-
-
