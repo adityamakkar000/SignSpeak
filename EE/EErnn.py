@@ -14,49 +14,33 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 mapping = {'a': [1,0,0,0,0,0,0,0,0],
-           'b': [0,1,0,0,0,0,0,0,0],
-           'c': [0,0,1,0,0,0,0,0,0],
-           'd': [0,0,0,1,0,0,0,0,0],
-           'e': [0,0,0,0,1,0,0,0,0],
-           'f': [0,0,0,0,0,1,0,0,0],
-           'g': [0,0,0,0,0,0,1,0,0],
-           'h': [0,0,0,0,0,0,0,1,0],
-           'i': [0,0,0,0,0,0,0,0,1]}
+        'b': [0,1,0,0,0,0,0,0,0],
+        'c': [0,0,1,0,0,0,0,0,0],
+        'd': [0,0,0,1,0,0,0,0,0],
+        'e': [0,0,0,0,1,0,0,0,0],
+        'f': [0,0,0,0,0,1,0,0,0],
+        'g': [0,0,0,0,0,0,1,0,0],
+        'h': [0,0,0,0,0,0,0,1,0],
+        'i': [0,0,0,0,0,0,0,0,1]}
 
-data = pandas.read_csv('/content/EEdata.csv')
-
-# data
-# tf.test.gpu_device_name()
+data = pandas.read_csv('./EEdata.csv')
 
 words = data['word']
 y = data['word']
 
-# words
-# y
 
 x = data.iloc[:,2:]
-
-# x
 
 data.iloc[:,2:]
 
 y = np.concatenate([[mapping[i] for i in y]])
 
-
-# y
-# print(y.shape)
-
 x = x.to_numpy()
 x = x[:,:45].reshape(900,5,9)
 
-# x.size
-# x
 
 x = x.transpose(0, 2, 1)
 x = np.nan_to_num(x)
-
-# x
-# x.shape
 
 encoder = models.Sequential([
     layers.SimpleRNN(64, return_sequences=True, input_shape=(None, 5)),
@@ -78,11 +62,8 @@ autoencoder = models.Sequential([
 autoencoder.summary()
 autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
-# x.shape
-# y.shape
-
 batch_size = 64
-epochs = 10
+epochs = 10000
 
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 autoencoder.fit(x_train, y_train,
