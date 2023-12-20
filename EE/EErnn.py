@@ -12,6 +12,12 @@ from tensorflow.keras import layers, models
 import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
+import pymongo
+
+client = pymongo.MongoClient('mongodb+srv://aditymakkar000:g69jDrsOgDz7tMKX@eedata.l1ghxko.mongodb.net/')
+db = client['cluster0']
+collection = db[('SIMPLE_RNN_1layer')]
+
 
 mapping = {'a': [1,0,0,0,0,0,0,0,0],
         'b': [0,1,0,0,0,0,0,0,0],
@@ -42,38 +48,32 @@ x = x[:,:45].reshape(900,5,9)
 x = x.transpose(0, 2, 1)
 x = np.nan_to_num(x)
 
+print(x.shape)
+
+
 encoder = models.Sequential([
-    layers.SimpleRNN(64, return_sequences=True, input_shape=(None, 5)),
-    layers.SimpleRNN(64)
+    layers.SimpleRNN(64,activation='tanh'),
+    layers.Dense(64, activation='tanh', input_shape=(64,)),
+    layers.Dense(9, activation='softmax')
 ])
 encoder.summary()
 
-decoder = models.Sequential([
-    layers.Dense(32, activation='relu', input_shape=(64,)),
-    layers.Dense(9, activation='softmax')
-])
-decoder.summary()
-
-
 autoencoder = models.Sequential([
-    encoder,
-    decoder
+    encoder
 ])
 autoencoder.summary()
-autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+autoencoder.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+encoder.summary()
 
 batch_size = 64
-epochs = 10000
+epochs = 1000
 
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 autoencoder.fit(x_train, y_train,
                 epochs=epochs,
                 batch_size=batch_size,
-                shuffle=True,
-                validation_data=(x_val, y_val))
+                shuffle=True)
+collection.insert_one({'model': 'SIMPLERNN', 'accuracy': autoencoder.evaluate(x_val, y_val)})
 
-autoencoder.evaluate(x_val, y_val)
-
-prediction_array = autoencoder.predict(x[:1])[0]
-autoencoder.save('EE_Rnn.keras')
-
+# do a k-fold cross validation
+# do a grid search for hyperparameters
