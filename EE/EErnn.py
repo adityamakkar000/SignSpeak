@@ -1,4 +1,4 @@
- import tensorflow as tf
+import tensorflow as tf
 from tensorflow.keras import layers, models
 import pandas
 import numpy as np
@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 import pymongo
 from model import researchModel
 
-client = pymongo.MongoClient('mongodb+srv://aditymakkar000:g69jDrsOgDz7tMKX@eedata.l1ghxko.mongodb.net/')
+client = pymongo.MongoClient('')
 db = client['cluster0']
 collection = [
     db[('SIMPLE_RNN_1_layer')],
