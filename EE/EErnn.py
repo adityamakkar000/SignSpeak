@@ -5,8 +5,12 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import pymongo
 from model import researchModel
+import os
+from dotenv import load_dotenv
 
-client = pymongo.MongoClient('')
+load_dotenv()
+
+client = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = client['cluster0']
 collection = [
     db[('SIMPLE_RNN_1_layer')],
@@ -74,4 +78,5 @@ for i in range(trials):
     m6 = researchModel("LSTM", 2, batch_size, epochs, x, y)
     results6 = m6.evaluate(x, y)
     collection[5].insert_one({'model': 'LSTM_RNN_2_layer', 'loss': results6[0], 'accuracy': results6[1]})
+
 
