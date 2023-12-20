@@ -4,7 +4,7 @@ import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
 import pymongo
-
+import keras
 
 class researchModel:
 
@@ -12,59 +12,71 @@ class researchModel:
     if(stacks == 1):
       if(type == "SimpleRNN"):
         self.encoder = models.Sequential([
-          layers.SimpleRNN(64,activation='tanh'),
-          layers.Dense(64, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(32, activation='tanh', input_shape=(18,5)),
+          layers.SimpleRNN(16,activation='tanh'),
+          layers.Dense(32, activation='tanh', input_shape=(64,)),
+          layers.Dense(9, activation='softmax', input_shape=(64,))
         ])
       elif(type == "GRU"):
         self.encoder = models.Sequential([
-          layers.GRU(64,activation='tanh'),
-          layers.Dense(64, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(32, activation='tanh', input_shape=(18,5)),
+          layers.GRU(16,activation='tanh'),
+          layers.Dense(32, activation='tanh', input_shape=(64,)),
+          layers.Dense(9, activation='softmax', input_shape=(64,))
         ])
       elif(type == "LSTM"):
         self.encoder = models.Sequential([
-          layers.LSTM(64,activation='tanh'),
-          layers.Dense(64, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(32, activation='tanh', input_shape=(18,5)),
+          layers.LSTM(16,activation='tanh'),
+          layers.Dense(32, activation='tanh', input_shape=(64,)),
+          layers.Dense(9, activation='softmax', input_shape=(64,))
         ])
     elif(stacks == 2):
       if(type == "SimpleRNN"):
         self.encoder = models.Sequential([
-          layers.SimpleRNN(64,activation='tanh', return_sequences=True),
-          layers.SimpleRNN(64,activation='tanh'),
-          layers.Dense(64, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(32, activation='tanh', input_shape=(18,5)),
+          layers.SimpleRNN(16,activation='tanh', return_sequences=True),
+          layers.SimpleRNN(16,activation='tanh'),
+          layers.Dense(32, activation='tanh', input_shape=(64,)),
+          layers.Dense(9, activation='softmax', input_shape=(64,))
         ])
       elif(type == "GRU"):
         self.encoder = models.Sequential([
-          layers.GRU(64,activation='tanh', return_sequences=True),
-          layers.GRU(64,activation='tanh'),
-          layers.Dense(64, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(32, activation='tanh', input_shape=(18,5)),
+          layers.GRU(16,activation='tanh', return_sequences=True),
+          layers.GRU(16,activation='tanh'),
+          layers.Dense(32, activation='tanh', input_shape=(64,)),
+          layers.Dense(9, activation='softmax', input_shape=(64,))
         ])
       elif(type == "LSTM"):
         self.encoder = models.Sequential([
-          layers.LSTM(64,activation='tanh', return_sequences=True),
-          layers.LSTM(64,activation='tanh'),
-          layers.Dense(64, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(32, activation='tanh', input_shape=(18,5)),
+          layers.LSTM(16,activation='tanh', return_sequences=True),
+          layers.LSTM(16,activation='tanh'),
+          layers.Dense(32, activation='tanh', input_shape=(64,)),
+          layers.Dense(9, activation='softmax', input_shape=(64,))
         ])
 
 
     self.autoencoder = models.Sequential([
       self.encoder
     ])
+    print("just before compile")
+    self.autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
+                             metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.F1Score(average='macro', threshold=None)])
 
-    self.autoencoder.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 
-    x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
-    self.autoencoder.fit(x_train, y_train,
+    self.x_train = self.x_train.astype('float32')
+    self.y_train = self.y_train.astype('float32')
+    self.x_val = self.x_val.astype('float32')
+    self.y_val = self.y_val.astype('float32')
+
+    self.autoencoder.fit(self.x_train, self.y_train,
                 epochs=epochs,
                 batch_size=batch_size,
                 shuffle=True)
 
-  def evaluate(self, x, y):
-    x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
-    return self.autoencoder.evaluate(x_val, y_val)
+  def evaluate(self):
+    return self.autoencoder.evaluate(self.x_val, self.y_val, batch_size=64)
 
