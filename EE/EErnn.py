@@ -115,7 +115,7 @@ x = data.iloc[:,2:]
 data.iloc[:,2:]
 y = np.concatenate([[mapping[i] for i in y]])
 x = x.to_numpy()
-x = x[:,:45].reshape(900,5,9)
+x = x[:,:90].reshape(900,5,18)
 x = x.transpose(0, 2, 1)
 x = np.nan_to_num(x)
 
