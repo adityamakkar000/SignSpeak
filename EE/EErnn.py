@@ -53,7 +53,7 @@ class researchModel:
         ])
       elif(type == "LSTM"):
         self.encoder = models.Sequential([
-          layers.Dense(64, activation='tanh', input_shape=(18,5)),
+          layers.Dense(32, activation='tanh', input_shape=(18,5)),
           layers.LSTM(64,activation='tanh', return_sequences=True),
           layers.LSTM(64,activation='tanh'),
           layers.Dense(32, activation='tanh', input_shape=(64,)),
@@ -107,7 +107,7 @@ mapping = {'a': [1,0,0,0,0,0,0,0,0],
         'h': [0,0,0,0,0,0,0,1,0],
         'i': [0,0,0,0,0,0,0,0,1]}
 
-data = pandas.read_csv('./EEdata.csv')
+data = pandas.read_csv('./data/EEdata.csv')
 
 words = data['word']
 y = data['word']
