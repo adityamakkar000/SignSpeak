@@ -18,10 +18,11 @@ def average(lst):
 class researchModel:
 
   def __init__(self, type, stacks, x, y, epochs, batch_size):
-    np.random.seed(1)
-    tf.random.set_seed(1)
-    random.seed(1)
-    os.environ['PYTHONHASHSEED']=str(1)
+    self.seed = 42
+    np.random.seed(self.seed)
+    tf.random.set_seed(self.seed)
+    random.seed(self.seed)
+    os.environ['PYTHONHASHSEED']=str(self.seed)
 
     if(stacks == 1):
       if(type == "SimpleRNN"):
