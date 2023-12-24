@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 import keras
 import random
 
+def average(lst):
+    return sum(lst) / len(lst)
 
 class researchModel:
 
@@ -72,7 +74,7 @@ class researchModel:
     ])
     print("just before compile")
     self.autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
-                             metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.F1Score(average='macro', threshold=None)])
+                             metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.F1Score(average=None, threshold=None)])
 
     self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 
@@ -84,10 +86,18 @@ class researchModel:
     self.autoencoder.fit(self.x_train, self.y_train,
                 epochs=epochs,
                 batch_size=batch_size,
-                shuffle=True)
+                shuffle=False)
 
   def evaluate(self):
-    return self.autoencoder.evaluate(self.x_val, self.y_val, batch_size=64)
+    y_pred = self.autoencoder.predict(self.x_val, batch_size=64)
+    y_labels = np.argmax(self.y_val, axis=1)
+    confusion_matrix = tf.math.confusion_matrix(labels=y_labels, predictions=y_pred.argmax(axis=1)).numpy()
+    cateogrial_accuracy = []
+    for i in range(9):
+      cateogrial_accuracy.append(confusion_matrix[i][i] / sum(confusion_matrix[i]))
+    results = self.autoencoder.evaluate(self.x_val, self.y_val, batch_size=64)
+    results.append(cateogrial_accuracy)
+    return results
 
 
 load_dotenv()
@@ -134,6 +144,7 @@ trials = 1
 for i in range(trials):
     m1 = researchModel("SimpleRNN", 1, batch_size, epochs, x, y, i)
     results1 = m1.evaluate()
+    results1.append(average(results1[2]))
     print(results1)
     # collection[0].insert_one({'model': 'SIMPLE_RNN_1_layer', 'loss': results1[0], 'accuracy': results1[1], 'Macro F1-Score': results1[2]})
 
