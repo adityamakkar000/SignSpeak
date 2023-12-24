@@ -3,22 +3,25 @@ from tensorflow.keras import layers, models
 import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 import pymongo
 import os
 from dotenv import load_dotenv
 import keras
 import random
 
+
+
 def average(lst):
     return sum(lst) / len(lst)
 
 class researchModel:
 
-  def __init__(self, type, stacks, batch_size, epochs, x, y, seed):
-    np.random.seed(seed)
-    tf.random.set_seed(seed)
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED']=str(seed)
+  def __init__(self, type, stacks, x, y, epochs, batch_size):
+    np.random.seed(1)
+    tf.random.set_seed(1)
+    random.seed(1)
+    os.environ['PYTHONHASHSEED']=str(1)
 
     if(stacks == 1):
       if(type == "SimpleRNN"):
@@ -69,36 +72,41 @@ class researchModel:
         ])
 
     self.encoder.summary()
-    self.autoencoder = models.Sequential([
-      self.encoder
-    ])
-    print("just before compile")
-    self.autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
-                             metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.F1Score(average=None, threshold=None)])
 
-    self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(x, y, test_size=0.2, random_state=42)
+    self.final_results = []
+    self.confusion_matrixs = []
+    self.spilts = 3 # change to 10 when needed
+    kfold = KFold(n_splits=self.spilts, shuffle=True)
 
-    self.x_train = self.x_train.astype('float32')
-    self.y_train = self.y_train.astype('float32')
-    self.x_val = self.x_val.astype('float32')
-    self.y_val = self.y_val.astype('float32')
+    for i, (train, test) in enumerate(kfold.split(x, y)):
+      x_train = x[train].astype('float32')
+      y_train = y[train].astype('float32')
+      x_val = x[test].astype('float32')
+      y_val = y[test].astype('float32')
+      autoencoder = models.Sequential([
+        self.encoder
+      ])
+      print("just before compile")
+      autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
+                                metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.F1Score(average=None, threshold=None)])
 
-    self.autoencoder.fit(self.x_train, self.y_train,
-                epochs=epochs,
-                batch_size=batch_size,
-                shuffle=False)
+      autoencoder.fit(x_train, y_train,
+                  epochs=epochs,
+                  batch_size=batch_size,
+                  shuffle=False)
 
-  def evaluate(self):
-    y_pred = self.autoencoder.predict(self.x_val, batch_size=64)
-    y_labels = np.argmax(self.y_val, axis=1)
-    confusion_matrix = tf.math.confusion_matrix(labels=y_labels, predictions=y_pred.argmax(axis=1)).numpy()
-    cateogrial_accuracy = []
-    for i in range(9):
-      cateogrial_accuracy.append(confusion_matrix[i][i] / sum(confusion_matrix[i]))
-    results = self.autoencoder.evaluate(self.x_val, self.y_val, batch_size=64)
-    results.append(cateogrial_accuracy)
-    results.append(average(results[2]))
-    return results
+      y_pred = autoencoder.predict(x_val, batch_size=64)
+      y_labels = np.argmax(y_val, axis=1)
+      confusion_matrix = tf.math.confusion_matrix(labels=y_labels, predictions=y_pred.argmax(axis=1)).numpy()
+      self.confusion_matrixs.append(confusion_matrix)
+      cateogrial_accuracy = []
+      for i in range(9):
+        cateogrial_accuracy.append(confusion_matrix[i][i] / sum(confusion_matrix[i]))
+      results = autoencoder.evaluate(x_val, y_val, batch_size=64)
+      results.append(average(results[2]))
+      results.append(cateogrial_accuracy)
+      self.final_results.append(results)
+
 
 
 load_dotenv()
@@ -142,35 +150,5 @@ batch_size = 64
 epochs = 100
 trials = 1
 
-for i in range(trials):
-    m1 = researchModel("SimpleRNN", 1, batch_size, epochs, x, y, i)
-    results1 = m1.evaluate()
-    print(results1)
-    # collection[0].insert_one({'model': 'SIMPLE_RNN_1_layer', 'loss': results1[0], 'accuracy': results1[1], 'Macro F1-Score': results1[2]})
-
-# for i in range(trials):
-#     m2 = researchModel("SimpleRNN", 2, batch_size, epochs, x, y)
-#     results2 = m2.evaluate()
-#     collection[1].insert_one({'model': 'SIMPLE_RNN_2_layer', 'loss': results2[0], 'accuracy': results2[1], 'Macro F1-Score': results2[2]})
-
-# for i in range(trials):
-#     m3 = researchModel("GRU", 1, batch_size, epochs, x, y)
-#     results3 = m3.evaluate()
-#     collection[2].insert_one({'model': 'GRU_RNN_1_layer', 'loss': results3[0], 'accuracy': results3[1], 'Macro F1-Score': results3[2]})
-
-# for i in range(trials):
-#     m4 = researchModel("GRU", 2, batch_size, epochs, x, y)
-#     # results4 = m4.evaluate()
-#     # collection[3].insert_one({'model': 'GRU_RNN_2_layer', 'loss': results4[0], 'accuracy': results4[1], 'Macro F1-Score': results4[2]})
-
-# for i in range(trials):
-#     m5 = researchModel("LSTM", 1, batch_size, epochs, x, y)
-#     # results5 = m5.evaluate()
-    # collection[4].insert_one({'model': 'LSTM_RNN_1_layer', 'loss': results5[0], 'accuracy': results5[1], 'Macro F1-Score': results5[2]})
-
-# for i in range(trials):
-#     m6 = researchModel("LSTM", 2, batch_size, epochs, x, y)
-#     results6 = m6.evaluate()
-#     collection[5].insert_one({'model': 'LSTM_RNN_2_layer', 'loss': results6[0], 'accuracy': results6[1], 'Macro F1-Score': results6[2]})
-
+m1 = researchModel("SimpleRNN", 1, x, y, epochs,batch_size)
 
