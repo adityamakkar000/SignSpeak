@@ -11,9 +11,69 @@ import keras
 import random
 
 
-
+# get average of list
 def average(lst):
     return sum(lst) / len(lst)
+
+# get encoder model
+class encoderModel:
+  def __init__(self, type, stacks):
+    self.seed = 42
+    np.random.seed(self.seed)
+    tf.random.set_seed(self.seed)
+    random.seed(self.seed)
+    os.environ['PYTHONHASHSEED']=str(self.seed)
+
+    if(stacks == 1):
+        if(type == "SimpleRNN"):
+          self.encoder = models.Sequential([
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.SimpleRNN(64,activation='tanh'),
+            layers.Dense(64, activation='tanh', input_shape=(32,)),
+            layers.Dense(9, activation='softmax')
+          ])
+        elif(type == "GRU"):
+          self.encoder = models.Sequential([
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.GRU(64,activation='tanh'),
+            layers.Dense(64, activation='tanh', input_shape=(32,)),
+            layers.Dense(9, activation='softmax')
+          ])
+        elif(type == "LSTM"):
+          self.encoder = models.Sequential([
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.LSTM(64,activation='tanh'),
+            layers.Dense(64, activation='tanh', input_shape=(32,)),
+            layers.Dense(9, activation='softmax')
+          ])
+    elif(stacks == 2):
+        if(type == "SimpleRNN"):
+          self.encoder = models.Sequential([
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.SimpleRNN(64,activation='tanh', return_sequences=True),
+            layers.SimpleRNN(64,activation='tanh'),
+            layers.Dense(64, activation='tanh', input_shape=(64,)),
+            layers.Dense(9, activation='softmax')
+          ])
+        elif(type == "GRU"):
+          self.encoder = models.Sequential([
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.GRU(64,activation='tanh', return_sequences=True),
+            layers.GRU(64,activation='tanh'),
+            layers.Dense(64, activation='tanh', input_shape=(128,)),
+            layers.Dense(9, activation='softmax')
+          ])
+        elif(type == "LSTM"):
+          self.encoder = models.Sequential([
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.LSTM(64,activation='tanh', return_sequences=True),
+            layers.LSTM(64,activation='tanh'),
+            layers.Dense(64, activation='tanh', input_shape=(64,)),
+            layers.Dense(9, activation='softmax')
+          ])
+
+
+# define the keras model
 
 class researchModel:
 
@@ -24,62 +84,16 @@ class researchModel:
     random.seed(self.seed)
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
-    if(stacks == 1):
-      if(type == "SimpleRNN"):
-        self.encoder = models.Sequential([
-          layers.Dense(32, activation='tanh', input_shape=(18,5)),
-          layers.SimpleRNN(64,activation='tanh'),
-          layers.Dense(32, activation='tanh', input_shape=(32,)),
-          layers.Dense(9, activation='softmax')
-        ])
-      elif(type == "GRU"):
-        self.encoder = models.Sequential([
-          layers.Dense(32, activation='tanh', input_shape=(18,5)),
-          layers.GRU(64,activation='tanh'),
-          layers.Dense(32, activation='tanh', input_shape=(32,)),
-          layers.Dense(9, activation='softmax')
-        ])
-      elif(type == "LSTM"):
-        self.encoder = models.Sequential([
-          layers.Dense(32, activation='tanh', input_shape=(18,5)),
-          layers.LSTM(16,activation='tanh'),
-          layers.Dense(32, activation='tanh', input_shape=(32,)),
-          layers.Dense(9, activation='softmax')
-        ])
-    elif(stacks == 2):
-      if(type == "SimpleRNN"):
-        self.encoder = models.Sequential([
-          layers.Dense(32, activation='tanh', input_shape=(18,5)),
-          layers.SimpleRNN(64,activation='tanh', return_sequences=True),
-          layers.SimpleRNN(64,activation='tanh'),
-          layers.Dense(32, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
-        ])
-      elif(type == "GRU"):
-        self.encoder = models.Sequential([
-          layers.Dense(64, activation='tanh', input_shape=(18,5)),
-          layers.GRU(128,activation='tanh', return_sequences=True),
-          layers.GRU(128,activation='tanh'),
-          layers.Dense(64, activation='tanh', input_shape=(128,)),
-          layers.Dense(9, activation='softmax')
-        ])
-      elif(type == "LSTM"):
-        self.encoder = models.Sequential([
-          layers.Dense(32, activation='tanh', input_shape=(18,5)),
-          layers.LSTM(64,activation='tanh', return_sequences=True),
-          layers.LSTM(64,activation='tanh'),
-          layers.Dense(32, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
-        ])
-
-    self.encoder.summary()
-
     self.final_results = []
     self.confusion_matrixs = []
     self.spilts = 3 # change to 10 when needed
     kfold = KFold(n_splits=self.spilts, shuffle=True)
 
     for i, (train, test) in enumerate(kfold.split(x, y)):
+
+      self.encoder = encoderModel(type, stacks).encoder
+      self.encoder.summary()
+
       x_train = x[train].astype('float32')
       y_train = y[train].astype('float32')
       x_val = x[test].astype('float32')
@@ -87,10 +101,10 @@ class researchModel:
       autoencoder = models.Sequential([
         self.encoder
       ])
-      print("just before compile")
-      autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
-                                metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.F1Score(average=None, threshold=None)])
 
+      autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
+                                metrics=[keras.metrics.CategoricalAccuracy(),
+                                         keras.metrics.F1Score(average=None, threshold=None)])
       autoencoder.fit(x_train, y_train,
                   epochs=epochs,
                   batch_size=batch_size,
@@ -109,18 +123,18 @@ class researchModel:
       self.final_results.append(results)
 
 
+# data  processing
 
 load_dotenv()
-
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client['RNN']
+db = client['RNN_Test']
 collection = [
-    db[('SIMPLE_RNN_1_layer_fullmetric_dense')],
-    db[('SIMPLE_RNN_2_layer_fullmetric_dense')],
-    db[('GRU_RNN_1_layer_fullmetric_dense')],
-    db[('GRU_RNN_2_layer_fullmetric_dense')],
-    db[('LSTM_RNN_1_layer_fullmetric_dense')],
-    db[('LSTM_RNN_2_layer_fullmetric_dense')]
+    db[('SIMPLE_1_layer_dense')],
+    db[('SIMPLE_2_layer_dense')],
+    db[('GRU_1_layer_dense')],
+    db[('GRU_2_layer_dense')],
+    db[('LSTM_1_layer_dense')],
+    db[('LSTM_2_layer_dense')]
 ]
 
 mapping = {'a': [1,0,0,0,0,0,0,0,0],
@@ -149,7 +163,65 @@ print(x.shape)
 
 batch_size = 64
 epochs = 100
-trials = 1
+
+# training
+print("starting training ...")
 
 m1 = researchModel("SimpleRNN", 1, x, y, epochs,batch_size)
+m2 = researchModel("SimpleRNN", 2, x, y, epochs,batch_size)
+m3 = researchModel("GRU", 1, x, y, epochs,batch_size)
+m4 = researchModel("GRU", 2, x, y, epochs,batch_size)
+m5 = researchModel("LSTM", 1, x, y, epochs,batch_size)
+m6 = researchModel("LSTM", 2, x, y, epochs,batch_size)
+
+# data upload
+print("starting data upload ...")
+
+for i in m1.final_results:
+  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+  f1score = f1score.tolist()
+  data  = {'model': 'SimpleRNN', 'loss': loss, 'accuracy': accuracy,
+           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+           'cateogrial_accuracy': cateogrial_accuracy}
+  collection[0].insert_one(data)
+
+for i in m2.final_results:
+  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+  f1score = f1score.tolist()
+  data  = {'model': 'SimpleRNN', 'loss': loss, 'accuracy': accuracy,
+           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+           'cateogrial_accuracy': cateogrial_accuracy}
+  collection[1].insert_one(data)
+
+for i in m3.final_results:
+  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+  f1score = f1score.tolist()
+  data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
+           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+           'cateogrial_accuracy': cateogrial_accuracy}
+  collection[2].insert_one(data)
+
+for i in m4.final_results:
+  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+  f1score = f1score.tolist()
+  data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
+           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+           'cateogrial_accuracy': cateogrial_accuracy}
+  collection[3].insert_one(data)
+
+for i in m5.final_results:
+  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+  f1score = f1score.tolist()
+  data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
+           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+           'cateogrial_accuracy': cateogrial_accuracy}
+  collection[4].insert_one(data)
+
+for i in m6.final_results:
+  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+  f1score = f1score.tolist()
+  data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
+           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+           'cateogrial_accuracy': cateogrial_accuracy}
+  collection[5].insert_one(data)
 
