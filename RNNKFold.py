@@ -127,7 +127,7 @@ class researchModel:
 
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client['RNN_Test']
+db = client['RNN_2']
 collection = [
     db[('SIMPLE_1_layer_dense')],
     db[('SIMPLE_2_layer_dense')],
