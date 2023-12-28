@@ -51,7 +51,7 @@ class encoderModel:
     elif(stacks == 2):
         if(type == "SimpleRNN"):
           self.encoder = models.Sequential([
-            # layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
             layers.SimpleRNN(64,activation='tanh', return_sequences=True, input_shape=(18,5)),
             layers.SimpleRNN(64,activation='tanh'),
             layers.Dense(64, activation='tanh', input_shape=(64,)),
@@ -93,6 +93,9 @@ class researchModel:
 
     for i, (train, test) in enumerate(kfold.split(x, y)):
 
+      print(train)
+      print("\n\n")
+      print(test)
       self.encoder = encoderModel(type, stacks).encoder
       self.encoder.summary()
 
@@ -176,9 +179,9 @@ cm = np.zeros((9,9))
 for i in confusion_matrixs:
   cm += i
 cm /= 5
-total = 0
-for i in range(9):
-  cm[i] /= sum(cm[i])
+# total = 0
+# for i in range(9):
+#   cm[i] /= sum(cm[i])
 
 
 disp = ConfusionMatrixDisplay(confusion_matrix=cm,
