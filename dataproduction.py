@@ -7,7 +7,9 @@ from sklearn.model_selection import KFold
 import pymongo
 import os
 from dotenv import load_dotenv
+from sklearn.metrics import ConfusionMatrixDisplay
 import keras
+import matplotlib.pyplot as plt
 import random
 
 
@@ -27,15 +29,15 @@ class encoderModel:
     if(stacks == 1):
         if(type == "SimpleRNN"):
           self.encoder = models.Sequential([
-            # layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
             layers.SimpleRNN(64,activation='tanh', input_shape=(18,5)),
             layers.Dense(64, activation='tanh', input_shape=(64,)),
             layers.Dense(9, activation='softmax')
           ])
         elif(type == "GRU"):
           self.encoder = models.Sequential([
-            # layers.Dense(64, activation='tanh', input_shape=(18,5)),
-            layers.GRU(64,activation='tanh', input_shape=(18,5)),
+            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.GRU(64,activation='tanh'),
             layers.Dense(64, activation='tanh', input_shape=(64,)),
             layers.Dense(9, activation='softmax')
           ])
@@ -86,7 +88,7 @@ class researchModel:
 
     self.final_results = []
     self.confusion_matrixs = []
-    self.spilts = 3 # change to 10 when needed
+    self.spilts = 5 # change to 10 when needed
     kfold = KFold(n_splits=self.spilts, shuffle=True)
 
     for i, (train, test) in enumerate(kfold.split(x, y)):
@@ -162,73 +164,26 @@ x = np.nan_to_num(x)
 print(x.shape)
 
 batch_size = 64
-epochs = 100
+epochs = 1000
 
 # training
 print("starting training ...")
 
-m1 = researchModel("SimpleRNN", 1, x, y, epochs,batch_size)
-m2 = researchModel("SimpleRNN", 2, x, y, epochs,batch_size)
-m3 = researchModel("GRU", 1, x, y, epochs,batch_size)
-m4 = researchModel("GRU", 2, x, y, epochs,batch_size)
-m5 = researchModel("LSTM", 1, x, y, epochs,batch_size)
-m6 = researchModel("LSTM", 2, x, y, epochs,batch_size)
+m1 = researchModel("SimpleRNN", 2, x, y, epochs,batch_size)
+confusion_matrixs = m1.confusion_matrixs
 
-# data upload
-print("starting data upload ...")
+cm = np.zeros((9,9))
+for i in confusion_matrixs:
+  cm += i
+cm /= 5
+total = 0
+for i in range(9):
+  cm[i] /= sum(cm[i])
 
-for i in m1.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'SimpleRNN', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[0].insert_one(data)
 
-for i in m2.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'SimpleRNN', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[1].insert_one(data)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm,
+                              display_labels=['a','b','c','d','e','f','g','h','i'])
 
-for i in m3.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[2].insert_one(data)
-
-for i in m4.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[3].insert_one(data)
-
-for i in m5.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[4].insert_one(data)
-
-for i in m6.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  print(data)
-  # collection[5].insert_one(data)
+disp.plot()
+plt.show()
 
