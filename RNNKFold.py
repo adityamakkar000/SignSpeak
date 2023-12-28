@@ -3,7 +3,7 @@ from tensorflow.keras import layers, models
 import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
+from sklearn.model_selection import stratifiedKFold
 import pymongo
 import os
 from dotenv import load_dotenv
@@ -86,10 +86,10 @@ class researchModel:
 
     self.final_results = []
     self.confusion_matrixs = []
-    self.spilts = 3 # change to 10 when needed
-    kfold = KFold(n_splits=self.spilts, shuffle=True)
-
-    for i, (train, test) in enumerate(kfold.split(x, y)):
+    self.spilts = 5
+    kfold = StratifiedKFold(n_splits=self.spilts, shuffle=True, random_state=self.seed)
+    y_label_encoded = np.argmax(y, axis=1)
+    for i, (train, test) in enumerate(kfold.split(x, y_label_encoded)):
 
       self.encoder = encoderModel(type, stacks).encoder
       self.encoder.summary()

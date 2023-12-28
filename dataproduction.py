@@ -3,13 +3,13 @@ from tensorflow.keras import layers, models
 import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import ConfusionMatrixDisplay
 import pymongo
 import os
+from matplotlib import pyplot as plt
 from dotenv import load_dotenv
-from sklearn.metrics import ConfusionMatrixDisplay
 import keras
-import matplotlib.pyplot as plt
 import random
 
 
@@ -29,15 +29,15 @@ class encoderModel:
     if(stacks == 1):
         if(type == "SimpleRNN"):
           self.encoder = models.Sequential([
-            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            # layers.Dense(64, activation='tanh', input_shape=(18,5)),
             layers.SimpleRNN(64,activation='tanh', input_shape=(18,5)),
             layers.Dense(64, activation='tanh', input_shape=(64,)),
             layers.Dense(9, activation='softmax')
           ])
         elif(type == "GRU"):
           self.encoder = models.Sequential([
-            layers.Dense(64, activation='tanh', input_shape=(18,5)),
-            layers.GRU(64,activation='tanh'),
+            # layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            layers.GRU(64,activation='tanh', input_shape=(18,5)),
             layers.Dense(64, activation='tanh', input_shape=(64,)),
             layers.Dense(9, activation='softmax')
           ])
@@ -51,7 +51,7 @@ class encoderModel:
     elif(stacks == 2):
         if(type == "SimpleRNN"):
           self.encoder = models.Sequential([
-            layers.Dense(64, activation='tanh', input_shape=(18,5)),
+            # layers.Dense(64, activation='tanh', input_shape=(18,5)),
             layers.SimpleRNN(64,activation='tanh', return_sequences=True, input_shape=(18,5)),
             layers.SimpleRNN(64,activation='tanh'),
             layers.Dense(64, activation='tanh', input_shape=(64,)),
@@ -88,14 +88,11 @@ class researchModel:
 
     self.final_results = []
     self.confusion_matrixs = []
-    self.spilts = 5 # change to 10 when needed
-    kfold = KFold(n_splits=self.spilts, shuffle=True)
+    self.spilts = 5
+    kfold = StratifiedKFold(n_splits=self.spilts, shuffle=True, random_state=self.seed)
+    y_label_encoded = np.argmax(y, axis=1)
+    for i, (train, test) in enumerate(kfold.split(x, y_label_encoded)):
 
-    for i, (train, test) in enumerate(kfold.split(x, y)):
-
-      print(train)
-      print("\n\n")
-      print(test)
       self.encoder = encoderModel(type, stacks).encoder
       self.encoder.summary()
 
@@ -167,7 +164,7 @@ x = np.nan_to_num(x)
 print(x.shape)
 
 batch_size = 64
-epochs = 1000
+epochs = 100
 
 # training
 print("starting training ...")
@@ -175,18 +172,9 @@ print("starting training ...")
 m1 = researchModel("SimpleRNN", 2, x, y, epochs,batch_size)
 confusion_matrixs = m1.confusion_matrixs
 
-cm = np.zeros((9,9))
 for i in confusion_matrixs:
-  cm += i
-cm /= 5
-# total = 0
-# for i in range(9):
-#   cm[i] /= sum(cm[i])
-
-
-disp = ConfusionMatrixDisplay(confusion_matrix=cm,
+  disp = ConfusionMatrixDisplay(confusion_matrix=i,
                               display_labels=['a','b','c','d','e','f','g','h','i'])
-
-disp.plot()
-plt.show()
+  disp.plot()
+  plt.show()
 
