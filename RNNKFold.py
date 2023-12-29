@@ -124,7 +124,7 @@ class researchModel:
 
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client['RNN_2']
+db = client['RNN_3']
 collection = [
 
     db[('SIMPLE_1_layer_nodense')],
@@ -169,7 +169,7 @@ x = np.nan_to_num(x)
 print(x.shape)
 
 batch_size = 64
-epochs = 1
+epochs = 1000
 
 # training
 print("starting training ...")
