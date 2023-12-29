@@ -3,7 +3,7 @@ from tensorflow.keras import layers, models
 import pandas
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import stratifiedKFold
+from sklearn.model_selection import StratifiedKFold
 import pymongo
 import os
 from dotenv import load_dotenv
@@ -49,11 +49,11 @@ class encoderModel:
     elif(stacks == 2):
         if(type == "SimpleRNN"):
           self.encoder = models.Sequential([
-            # layers.Dense(64, activation='tanh', input_shape=(18,5)),
-            layers.SimpleRNN(64,activation='tanh', return_sequences=True, input_shape=(18,5)),
+            layers.Dense(64, activation='tanh', input_shape=(9,5)),
+            layers.SimpleRNN(64,activation='tanh', return_sequences=True, input_shape=(9,5)),
             layers.SimpleRNN(64,activation='tanh'),
             layers.Dense(64, activation='tanh', input_shape=(64,)),
-            layers.Dense(9, activation='softmax')
+            layers.Dense(10, activation='softmax')
           ])
         elif(type == "GRU"):
           self.encoder = models.Sequential([
@@ -118,6 +118,9 @@ class researchModel:
       for i in range(9):
         cateogrial_accuracy.append(confusion_matrix[i][i] / sum(confusion_matrix[i]))
       results = autoencoder.evaluate(x_val, y_val, batch_size=64)
+      accuracy = results[1]
+      with open('results.txt', 'a') as f:
+        f.write(str(accuracy) + '\n')
       results.append(average(results[2]))
       results.append(cateogrial_accuracy)
       self.final_results.append(results)
@@ -137,17 +140,19 @@ collection = [
     db[('LSTM_2_layer_dense')]
 ]
 
-mapping = {'a': [1,0,0,0,0,0,0,0,0],
-        'b': [0,1,0,0,0,0,0,0,0],
-        'c': [0,0,1,0,0,0,0,0,0],
-        'd': [0,0,0,1,0,0,0,0,0],
-        'e': [0,0,0,0,1,0,0,0,0],
-        'f': [0,0,0,0,0,1,0,0,0],
-        'g': [0,0,0,0,0,0,1,0,0],
-        'h': [0,0,0,0,0,0,0,1,0],
-        'i': [0,0,0,0,0,0,0,0,1]}
 
-data = pandas.read_csv('./data/EEdata.csv')
+mapping = {'a': [1,0,0,0,0,0,0,0,0,0],
+           'b': [0,1,0,0,0,0,0,0,0,0],
+           'c': [0,0,1,0,0,0,0,0,0,0],
+           'd': [0,0,0,1,0,0,0,0,0,0],
+           'e': [0,0,0,0,1,0,0,0,0,0],
+           'f': [0,0,0,0,0,1,0,0,0,0],
+           'g': [0,0,0,0,0,0,1,0,0,0],
+           'h': [0,0,0,0,0,0,0,1,0,0],
+           'i': [0,0,0,0,0,0,0,0,1,0],
+         'none':[0,0,0,0,0,0,0,0,0,1]}
+
+data = pandas.read_csv('./Data/Data.csv')
 
 words = data['word']
 y = data['word']
@@ -155,36 +160,36 @@ x = data.iloc[:,2:]
 data.iloc[:,2:]
 y = np.concatenate([[mapping[i] for i in y]])
 x = x.to_numpy()
-x = x[:,:90].reshape(900,5,18)
+x = x[:,:45].reshape(1000,5,9)
 x = x.transpose(0, 2, 1)
 x = np.nan_to_num(x)
 
 print(x.shape)
 
 batch_size = 64
-epochs = 100
+epochs = 1000
 
 # training
 print("starting training ...")
 
-m1 = researchModel("SimpleRNN", 1, x, y, epochs,batch_size)
+# m1 = researchModel("SimpleRNN", 1, x, y, epochs,batch_size)
 m2 = researchModel("SimpleRNN", 2, x, y, epochs,batch_size)
-m3 = researchModel("GRU", 1, x, y, epochs,batch_size)
-m4 = researchModel("GRU", 2, x, y, epochs,batch_size)
-m5 = researchModel("LSTM", 1, x, y, epochs,batch_size)
-m6 = researchModel("LSTM", 2, x, y, epochs,batch_size)
+# m3 = researchModel("GRU", 1, x, y, epochs,batch_size)
+# m4 = researchModel("GRU", 2, x, y, epochs,batch_size)
+# m5 = researchModel("LSTM", 1, x, y, epochs,batch_size)
+# m6 = researchModel("LSTM", 2, x, y, epochs,batch_size)
 
 # data upload
 print("starting data upload ...")
 
-for i in m1.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'SimpleRNN', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[0].insert_one(data)
+# for i in m1.final_results:
+#   loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+#   f1score = f1score.tolist()
+#   data  = {'model': 'SimpleRNN', 'loss': loss, 'accuracy': accuracy,
+#            'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+#            'cateogrial_accuracy': cateogrial_accuracy}
+#   print(data)
+#   # collection[0].insert_one(data)
 
 for i in m2.final_results:
   loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
@@ -195,40 +200,40 @@ for i in m2.final_results:
   print(data)
   # collection[1].insert_one(data)
 
-for i in m3.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[2].insert_one(data)
+# for i in m3.final_results:
+#   loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+#   f1score = f1score.tolist()
+#   data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
+#            'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+#            'cateogrial_accuracy': cateogrial_accuracy}
+#   print(data)
+#   # collection[2].insert_one(data)
 
-for i in m4.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[3].insert_one(data)
+# for i in m4.final_results:
+#   loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+#   f1score = f1score.tolist()
+#   data  = {'model': 'GRU', 'loss': loss, 'accuracy': accuracy,
+#            'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+#            'cateogrial_accuracy': cateogrial_accuracy}
+#   print(data)
+#   # collection[3].insert_one(data)
 
-for i in m5.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  # collection[4].insert_one(data)
+# for i in m5.final_results:
+#   loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+#   f1score = f1score.tolist()
+#   data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
+#            'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+#            'cateogrial_accuracy': cateogrial_accuracy}
+#   print(data)
+#   # collection[4].insert_one(data)
 
-for i in m6.final_results:
-  loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-  f1score = f1score.tolist()
-  data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
-           'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-           'cateogrial_accuracy': cateogrial_accuracy}
-  print(data)
-  print(data)
+# for i in m6.final_results:
+#   loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
+#   f1score = f1score.tolist()
+#   data  = {'model': 'LSTM', 'loss': loss, 'accuracy': accuracy,
+#            'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
+#            'cateogrial_accuracy': cateogrial_accuracy}
+#   print(data)
+#   print(data)
   # collection[5].insert_one(data)
 

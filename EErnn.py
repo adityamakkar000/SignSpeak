@@ -26,21 +26,21 @@ class researchModel:
           layers.Dense(32, activation='tanh', input_shape=(18,5)),
           layers.SimpleRNN(64,activation='tanh'),
           layers.Dense(32, activation='tanh', input_shape=(32,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(10, activation='softmax')
         ])
       elif(type == "GRU"):
         self.encoder = models.Sequential([
           layers.Dense(32, activation='tanh', input_shape=(18,5)),
           layers.GRU(64,activation='tanh'),
           layers.Dense(32, activation='tanh', input_shape=(32,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(10, activation='softmax')
         ])
       elif(type == "LSTM"):
         self.encoder = models.Sequential([
           layers.Dense(32, activation='tanh', input_shape=(18,5)),
           layers.LSTM(16,activation='tanh'),
           layers.Dense(32, activation='tanh', input_shape=(32,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(10, activation='softmax')
         ])
     elif(stacks == 2):
       if(type == "SimpleRNN"):
@@ -49,7 +49,7 @@ class researchModel:
           layers.SimpleRNN(64,activation='tanh', return_sequences=True),
           layers.SimpleRNN(64,activation='tanh'),
           layers.Dense(32, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(10, activation='softmax')
         ])
       elif(type == "GRU"):
         self.encoder = models.Sequential([
@@ -57,7 +57,7 @@ class researchModel:
           layers.GRU(128,activation='tanh', return_sequences=True),
           layers.GRU(128,activation='tanh'),
           layers.Dense(64, activation='tanh', input_shape=(128,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(10, activation='softmax')
         ])
       elif(type == "LSTM"):
         self.encoder = models.Sequential([
@@ -65,7 +65,7 @@ class researchModel:
           layers.LSTM(64,activation='tanh', return_sequences=True),
           layers.LSTM(64,activation='tanh'),
           layers.Dense(32, activation='tanh', input_shape=(64,)),
-          layers.Dense(9, activation='softmax')
+          layers.Dense(10, activation='softmax')
         ])
 
     self.encoder.summary()
@@ -114,15 +114,16 @@ collection = [
     db[('LSTM_RNN_2_layer_fullmetric_dense')]
 ]
 
-mapping = {'a': [1,0,0,0,0,0,0,0,0],
-        'b': [0,1,0,0,0,0,0,0,0],
-        'c': [0,0,1,0,0,0,0,0,0],
-        'd': [0,0,0,1,0,0,0,0,0],
-        'e': [0,0,0,0,1,0,0,0,0],
-        'f': [0,0,0,0,0,1,0,0,0],
-        'g': [0,0,0,0,0,0,1,0,0],
-        'h': [0,0,0,0,0,0,0,1,0],
-        'i': [0,0,0,0,0,0,0,0,1]}
+mapping = {'a': [1,0,0,0,0,0,0,0,0,0],
+           'b': [0,1,0,0,0,0,0,0,0,0],
+           'c': [0,0,1,0,0,0,0,0,0,0],
+           'd': [0,0,0,1,0,0,0,0,0,0],
+           'e': [0,0,0,0,1,0,0,0,0,0],
+           'f': [0,0,0,0,0,1,0,0,0,0],
+           'g': [0,0,0,0,0,0,1,0,0,0],
+           'h': [0,0,0,0,0,0,0,1,0,0],
+           'i': [0,0,0,0,0,0,0,0,1,0],
+         'none':[0,0,0,0,0,0,0,0,0,1]}
 
 data = pandas.read_csv('./data/EEdata.csv')
 
@@ -132,7 +133,7 @@ x = data.iloc[:,2:]
 data.iloc[:,2:]
 y = np.concatenate([[mapping[i] for i in y]])
 x = x.to_numpy()
-x = x[:,:90].reshape(900,5,18)
+x = x[:,:45].reshape(1000,5,9)
 x = x.transpose(0, 2, 1)
 x = np.nan_to_num(x)
 
