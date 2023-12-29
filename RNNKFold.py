@@ -190,4 +190,4 @@ models = {
 }
 
 for i in models:
-  data_upload(models[i], collection[int(i[1])-1])
+  data_upload(models[i], collection[int(i[1:])-1])
