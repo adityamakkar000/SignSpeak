@@ -15,6 +15,7 @@ import random
 def average(lst):
     return sum(lst) / len(lst)
 
+# upload data
 def data_upload(model, collection):
   for i in model.final_results:
     loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
@@ -26,6 +27,7 @@ def data_upload(model, collection):
 
 # get encoder model
 class encoderModel:
+
   def __init__(self, type, stacks, dense):
     self.seed = 42
     np.random.seed(self.seed)
@@ -34,8 +36,8 @@ class encoderModel:
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
 
-    self.RNNNeurons = 64
-    self.DenseNeurons = 64
+    self.RNNNeurons = 128
+    self.DenseNeurons = 128
 
     if(dense == True):
       self.encoder = models.Sequential([
@@ -46,31 +48,35 @@ class encoderModel:
 
     if(stacks == 2):
       if(type == "SimpleRNN"):
-        self.encoder.add(layers.SimpleRNN(self.RNNNeurons,activation='tanh', return_sequences=True,input_shape=(9,5)))
+        self.encoder.add(layers.SimpleRNN(self.RNNNeurons,activation='tanh',
+                                          return_sequences=True,input_shape=(9,5)))
       if(type == "GRU"):
-        self.encoder.add(layers.GRU(self.RNNNeurons,activation='tanh', return_sequences=True, input_shape=(9,5)))
+        self.encoder.add(layers.GRU(self.RNNNeurons,activation='tanh',
+                                    return_sequences=True, input_shape=(9,5)))
       if(type == "LSTM"):
-        self.encoder.add(layers.LSTM(self.RNNNeurons,activation='tanh', return_sequences=True, input_shape=(9,5)))
+        self.encoder.add(layers.LSTM(self.RNNNeurons,activation='tanh',
+                                     return_sequences=True, input_shape=(9,5)))
 
     if(type == "SimpleRNN"):
-      self.encoder.add(layers.SimpleRNN(self.RNNNeurons,activation='tanh', input_shape=(9,5)))
+      self.encoder.add(layers.SimpleRNN(self.RNNNeurons,
+                                        activation='tanh', input_shape=(9,5)))
     elif(type == "GRU"):
-      self.encoder.add(layers.GRU(self.RNNNeurons,activation='tanh', input_shape=(9,5)))
+      self.encoder.add(layers.GRU(self.RNNNeurons,
+                                  activation='tanh', input_shape=(9,5)))
     elif(type == "LSTM"):
-      self.encoder.add(layers.LSTM(self.RNNNeurons,activation='tanh', input_shape=(9,5)))
+      self.encoder.add(layers.LSTM(self.RNNNeurons,
+                                   activation='tanh', input_shape=(9,5)))
 
 
     self.decoder = models.Sequential([
-      layers.Dense(self.DenseNeurons, activation='tanh', input_shape=(64,)),
+      layers.Dense(self.DenseNeurons,
+                   activation='tanh', input_shape=(self.RNNNeurons,)),
       layers.Dense(10, activation='softmax')
     ])
 
     self.autoencoder = models.Sequential(self.encoder.layers + self.decoder.layers)
 
-
-
-# define the keras model
-
+# define the research  model
 class researchModel:
 
   def __init__(self, type, stacks, x, y, epochs, batch_size, dense):
@@ -106,10 +112,11 @@ class researchModel:
 
       y_pred = autoencoder.predict(x_val, batch_size=64)
       y_labels = np.argmax(y_val, axis=1)
-      confusion_matrix = tf.math.confusion_matrix(labels=y_labels, predictions=y_pred.argmax(axis=1)).numpy()
+      confusion_matrix = tf.math.confusion_matrix(labels=y_labels,
+                                                  predictions=y_pred.argmax(axis=1)).numpy()
       self.confusion_matrixs.append(confusion_matrix)
       cateogrial_accuracy = []
-      for i in range(9):
+      for i in range(10):
         cateogrial_accuracy.append(confusion_matrix[i][i] / sum(confusion_matrix[i]))
       results = autoencoder.evaluate(x_val, y_val, batch_size=64)
       accuracy = results[1]
@@ -121,10 +128,9 @@ class researchModel:
 
 
 # data  processing
-
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client['RNN_3']
+db = client['RNN_4']
 collection = [
 
     db[('SIMPLE_1_layer_nodense')],
