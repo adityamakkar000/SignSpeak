@@ -10,19 +10,16 @@ from dotenv import load_dotenv
 import keras
 import random
 
+
 # get average of list
 def average(lst):
     return sum(lst) / len(lst)
 
 # upload data
 def data_upload(model, collection):
-  for i in model.final_results:
-    loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-    f1score = f1score.tolist()
-    data  = {'model': model.type, 'loss': loss, 'accuracy': accuracy,
-             'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-             'cateogrial_accuracy': cateogrial_accuracy}
-    collection.insert_one(data)
+  cms = np.array(model.confusion_matrixs).tolist()
+  data  = {'model': model.type,'confusion_matrix': cms}
+  collection.insert_one(data)
 
 # get encoder model
 class encoderModel:
@@ -35,8 +32,8 @@ class encoderModel:
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
 
-    self.RNNNeurons = 64
-    self.DenseNeurons = 64
+    self.RNNNeurons = 128
+    self.DenseNeurons = 128
 
     if(dense == True):
       self.encoder = models.Sequential([
@@ -121,23 +118,22 @@ class researchModel:
       cat_accuracy = []
       for i in range(10):
         TP = confusion_matrix[i][i]
-        FP = sum(confusion_matrix[:,i]) - TP
-        FN = sum(confusion_matrix[i]) - TP
-        TN = sum(sum(confusion_matrix)) - TP - FP - FN
-        cat_accuracy.append((TP + TN) / (TP + FP + FN + TN))
+        cat_accuracy.append(TP/sum(confusion_matrix[i]))
       results = autoencoder.evaluate(x_val, y_val, batch_size=64)
-      results[1] = average(cat_accuracy)
-      with open('results.txt', 'a') as f:
-        f.write(str(results[1]) + '\n')
+      accuracy = results[1]
+      with open('test.txt', 'a') as f:
+          f.write(str(accuracy) +'\n')
       results.append(average(results[2]))
       results.append(cat_accuracy)
       self.final_results.append(results)
 
+
 # data  processing
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client['RNN_6_Newaccuracy_64neurons']
+db = client['RNN_4_additional']
 collection = [
+
     db[('SIMPLE_1_layer_nodense')],
     db[('SIMPLE_2_layer_nodense')],
     db[('GRU_1_layer_nodense')],
@@ -151,6 +147,7 @@ collection = [
     db[('GRU_2_layer_dense')],
     db[('LSTM_1_layer_dense')],
     db[('LSTM_2_layer_dense')]
+
 ]
 
 mapping = {'a': [1,0,0,0,0,0,0,0,0,0],
@@ -185,18 +182,18 @@ epochs = 1000
 print("starting training ...")
 
 models = {
-  "m1": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=False),
+  # "m1": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=False),
   "m2": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=False),
   "m3": researchModel("GRU", 1, x, y, epochs,batch_size, dense=False),
-  "m4": researchModel("GRU", 2, x, y, epochs,batch_size, dense=False),
-  "m5": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=False),
-  "m6": researchModel("LSTM", 2, x, y, epochs,batch_size, dense=False),
-  "m7": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=True),
-  "m8": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=True),
+  # "m4": researchModel("GRU", 2, x, y, epochs,batch_size, dense=False),
+  # "m5": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=False),
+  # "m6": researchModel("LSTM", 2, x, y, epochs,batch_size, dense=False),
+  # "m7": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=True),
+  # "m8": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=True),
   "m9": researchModel("GRU", 1, x, y, epochs,batch_size, dense=True),
   "m10": researchModel("GRU", 2, x, y, epochs,batch_size, dense=True),
-  "m11": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=True),
-  "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
+  # # "m11": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=True),
+  # "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
 }
 
 for i in models:
