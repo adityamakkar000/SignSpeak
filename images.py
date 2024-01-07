@@ -9,6 +9,8 @@ import os
 from dotenv import load_dotenv
 import keras
 import random
+import matplotlib.pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay
 
 
 # get average of list
@@ -17,10 +19,12 @@ def average(lst):
 
 # upload data
 def data_upload(model, collection):
-  cms = np.array(model.confusion_matrixs).tolist()
-  data  = {'model': model.type,'confusion_matrix': cms}
-  print(data)
-  # collection.insert_one(data)
+  cms = model.confusion_matrixs
+  print(collection.name)
+  disp = ConfusionMatrixDisplay(confusion_matrix=cms,
+                              display_labels=['A','B','C','D','E','F','G','H','I','None'])
+  disp.plot()
+  plt.show()
 
 # get encoder model
 class encoderModel:
@@ -90,11 +94,13 @@ class researchModel:
     kfold = StratifiedKFold(n_splits=self.spilts, shuffle=True, random_state=self.seed)
     autoencoder = encoderModel(type, stacks, dense).autoencoder
     autoencoder.summary()
-    with open('param.txt', 'a') as f:
-        f.write(str(autoencoder.count_params()) + type  +'\n')
+    # with open('param.txt', 'a') as f:
+    #     f.write(str(autoencoder.count_params()) + type  +'\n')
     y_label_encoded = np.argmax(y, axis=1)
     for i, (train, test) in enumerate(kfold.split(x, y_label_encoded)):
 
+      with open('split.txt', 'a') as f:
+        f.write(str(test) + '\n')
       x_train = x[train].astype('float32')
       y_train = y[train].astype('float32')
       x_val = x[test].astype('float32')
@@ -181,10 +187,8 @@ x = x[:,:45].reshape(1000,5,9)
 x = x.transpose(0, 2, 1)
 x = np.nan_to_num(x)
 
-print(x.shape)
-
 batch_size = 64
-epochs = 1000
+epochs = 1
 
 # training
 print("starting training ...")
