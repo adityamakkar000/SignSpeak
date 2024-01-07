@@ -19,7 +19,8 @@ def average(lst):
 def data_upload(model, collection):
   cms = np.array(model.confusion_matrixs).tolist()
   data  = {'model': model.type,'confusion_matrix': cms}
-  collection.insert_one(data)
+  print(data)
+  # collection.insert_one(data)
 
 # get encoder model
 class encoderModel:
@@ -30,7 +31,6 @@ class encoderModel:
     tf.random.set_seed(self.seed)
     random.seed(self.seed)
     os.environ['PYTHONHASHSEED']=str(self.seed)
-
 
     self.RNNNeurons = 128
     self.DenseNeurons = 128
@@ -82,10 +82,11 @@ class researchModel:
     random.seed(self.seed)
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
+
+    self.spilts = 5
     self.type = type
     self.final_results = []
     self.confusion_matrixs = []
-    self.spilts = 5
     kfold = StratifiedKFold(n_splits=self.spilts, shuffle=True, random_state=self.seed)
     autoencoder = encoderModel(type, stacks, dense).autoencoder
     autoencoder.summary()
@@ -118,22 +119,30 @@ class researchModel:
       cat_accuracy = []
       for i in range(10):
         TP = confusion_matrix[i][i]
-        cat_accuracy.append(TP/sum(confusion_matrix[i]))
+        FP = sum(confusion_matrix[:,i]) - TP
+        FN = sum(confusion_matrix[i]) - TP
+        TN = sum(sum(confusion_matrix)) - TP - FP - FN
+        cat_accuracy.append((TP + TN) / (TP + FP + FN + TN))
       results = autoencoder.evaluate(x_val, y_val, batch_size=64)
-      accuracy = results[1]
-      with open('test.txt', 'a') as f:
-          f.write(str(accuracy) +'\n')
+      results[1] = average(cat_accuracy)
+      with open('results.txt', 'a') as f:
+        f.write(str(results[1]) + '\n')
       results.append(average(results[2]))
       results.append(cat_accuracy)
       self.final_results.append(results)
+
+    cm_avg = np.zeros((10,10))
+    for cm in self.confusion_matrixs:
+      cm_avg = cm_avg + cm
+    cm_avg = cm_avg / 5
+    self.confusion_matrixs = cm_avg
 
 
 # data  processing
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client['RNN_4_additional']
+db = client['RNN_9_Newaccuracy_64neurons_withCMs']
 collection = [
-
     db[('SIMPLE_1_layer_nodense')],
     db[('SIMPLE_2_layer_nodense')],
     db[('GRU_1_layer_nodense')],
@@ -147,7 +156,6 @@ collection = [
     db[('GRU_2_layer_dense')],
     db[('LSTM_1_layer_dense')],
     db[('LSTM_2_layer_dense')]
-
 ]
 
 mapping = {'a': [1,0,0,0,0,0,0,0,0,0],
@@ -183,17 +191,17 @@ print("starting training ...")
 
 models = {
   # "m1": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=False),
-  "m2": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=False),
+  # "m2": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=False),
   "m3": researchModel("GRU", 1, x, y, epochs,batch_size, dense=False),
-  # "m4": researchModel("GRU", 2, x, y, epochs,batch_size, dense=False),
-  # "m5": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=False),
-  # "m6": researchModel("LSTM", 2, x, y, epochs,batch_size, dense=False),
-  # "m7": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=True),
-  # "m8": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=True),
+  "m4": researchModel("GRU", 2, x, y, epochs,batch_size, dense=False),
+  "m5": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=False),
+  "m6": researchModel("LSTM", 2, x, y, epochs,batch_size, dense=False),
+  # # "m7": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=True),
+  # # "m8": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=True),
   "m9": researchModel("GRU", 1, x, y, epochs,batch_size, dense=True),
   "m10": researchModel("GRU", 2, x, y, epochs,batch_size, dense=True),
-  # # "m11": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=True),
-  # "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
+  "m11": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=True),
+  "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
 }
 
 for i in models:

@@ -36,8 +36,8 @@ class encoderModel:
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
 
-    self.RNNNeurons = 32
-    self.DenseNeurons = 64
+    self.RNNNeurons = 128
+    self.DenseNeurons = 128
 
     if(dense == True):
       self.encoder = models.Sequential([
@@ -86,64 +86,58 @@ class researchModel:
     random.seed(self.seed)
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
-
-    self.spilts = 5
     self.type = type
     self.final_results = []
     self.confusion_matrixs = []
+    self.spilts = 5
     kfold = StratifiedKFold(n_splits=self.spilts, shuffle=True, random_state=self.seed)
     autoencoder = encoderModel(type, stacks, dense).autoencoder
     autoencoder.summary()
     with open('param.txt', 'a') as f:
         f.write(str(autoencoder.count_params()) + type  +'\n')
     y_label_encoded = np.argmax(y, axis=1)
-    for i, (train, test) in enumerate(kfold.split(x, y_label_encoded)):
+    # for i, (train, test) in enumerate(kfold.split(x, y_label_encoded)):
 
-      x_train = x[train].astype('float32')
-      y_train = y[train].astype('float32')
-      x_val = x[test].astype('float32')
-      y_val = y[test].astype('float32')
+      # x_train = x[train].astype('float32')
+      # y_train = y[train].astype('float32')
+      # x_val = x[test].astype('float32')
+      # y_val = y[test].astype('float32')
 
-      autoencoder = encoderModel(type, stacks, dense).autoencoder
-      autoencoder.summary()
+      # autoencoder = encoderModel(type, stacks, dense).autoencoder
+      # autoencoder.summary()
 
-      autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
-                                metrics=[keras.metrics.CategoricalAccuracy(),
-                                         keras.metrics.F1Score(average=None, threshold=None)])
-      autoencoder.fit(x_train, y_train,
-                  epochs=epochs,
-                  batch_size=batch_size,
-                  shuffle=False)
+      # autoencoder.compile(optimizer='adam', loss='categorical_crossentropy',
+      #                           metrics=[keras.metrics.CategoricalAccuracy(),
+      #                                    keras.metrics.F1Score(average=None, threshold=None)])
+      # autoencoder.fit(x_train, y_train,
+      #             epochs=epochs,
+      #             batch_size=batch_size,
+      #             shuffle=False)
 
-      y_pred = autoencoder.predict(x_val, batch_size=64)
-      y_labels = np.argmax(y_val, axis=1)
-      confusion_matrix = tf.math.confusion_matrix(labels=y_labels,
-                                                  predictions=y_pred.argmax(axis=1)).numpy()
-      self.confusion_matrixs.append(confusion_matrix)
-      cat_accuracy = []
-      for i in range(10):
-        TP = confusion_matrix[i][i]
-        FP = sum(confusion_matrix[:,i]) - TP
-        FN = sum(confusion_matrix[i]) - TP
-        TN = sum(sum(confusion_matrix)) - TP - FP - FN
-        cat_accuracy.append((TP + TN) / (TP + FP + FN + TN))
-      results = autoencoder.evaluate(x_val, y_val, batch_size=64)
-      results[1] = average(cat_accuracy)
-      with open('results.txt', 'a') as f:
-        f.write(str(results[1]) + '\n')
-      results.append(average(results[2]))
-      results.append(cat_accuracy)
-      self.final_results.append(results)
+      # y_pred = autoencoder.predict(x_val, batch_size=64)
+      # y_labels = np.argmax(y_val, axis=1)
+      # confusion_matrix = tf.math.confusion_matrix(labels=y_labels,
+      #                                             predictions=y_pred.argmax(axis=1)).numpy()
+      # self.confusion_matrixs.append(confusion_matrix)
+      # cat_accuracy = []
+      # for i in range(10):
+      #   TP = confusion_matrix[i][i]
+      #   FP = sum(confusion_matrix[:,i]) - TP
+      #   FN = sum(confusion_matrix[i]) - TP
+      #   TN = sum(sum(confusion_matrix)) - TP - FP - FN
+      #   cat_accuracy.append((TP + TN) / (TP + FP + FN + TN))
+      # results = autoencoder.evaluate(x_val, y_val, batch_size=64)
+      # results[1] = average(cat_accuracy)
+      # with open('results.txt', 'a') as f:
+      #   f.write(str(results[1]) + '\n')
+      # results.append(average(results[2]))
+      # results.append(cat_accuracy)
+      # self.final_results.append(results)
 
-    cm_avg = np.zeros((10,10))
-    for cm in self.confusion_matrixs:
-      cm_avg = cm_avg + cm
-    cm_avg = cm_avg / 5
-    self.confusion_matrixs = cm_avg
 # data  processing
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client['RNN_9_Newaccuracy_64neurons_withCMs']
+db = client['RNN_7_Newaccuracy_32neurons_withCMs']
 collection = [
     db[('SIMPLE_1_layer_nodense')],
     db[('SIMPLE_2_layer_nodense')],
@@ -186,7 +180,7 @@ x = np.nan_to_num(x)
 print(x.shape)
 
 batch_size = 64
-epochs = 1000
+epochs = 1
 
 # training
 print("starting training ...")
@@ -206,5 +200,5 @@ models = {
   "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
 }
 
-for i in models:
-  data_upload(models[i], collection[int(i[1:])-1])
+# for i in models:
+#   data_upload(models[i], collection[int(i[1:])-1])
