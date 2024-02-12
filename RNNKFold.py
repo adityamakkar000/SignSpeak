@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import keras
 import random
 
+
 # get average of list
 def average(lst):
     return sum(lst) / len(lst)
@@ -35,9 +36,8 @@ class encoderModel:
     random.seed(self.seed)
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
-
-    self.RNNNeurons = 32
-    self.DenseNeurons = 64
+    self.RNNNeurons = 16
+    self.DenseNeurons = 32
 
     if(dense == True):
       self.encoder = models.Sequential([
@@ -129,7 +129,7 @@ class researchModel:
         cat_accuracy.append((TP + TN) / (TP + FP + FN + TN))
       results = autoencoder.evaluate(x_val, y_val, batch_size=64)
       results[1] = average(cat_accuracy)
-      with open('results.txt', 'a') as f:
+      with open('results_new.txt', 'a') as f:
         f.write(str(results[1]) + '\n')
       results.append(average(results[2]))
       results.append(cat_accuracy)
@@ -194,16 +194,16 @@ print("starting training ...")
 models = {
   # "m1": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=False),
   # "m2": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=False),
-  "m3": researchModel("GRU", 1, x, y, epochs,batch_size, dense=False),
-  "m4": researchModel("GRU", 2, x, y, epochs,batch_size, dense=False),
-  "m5": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=False),
-  "m6": researchModel("LSTM", 2, x, y, epochs,batch_size, dense=False),
+  # "m3": researchModel("GRU", 1, x, y, epochs,batch_size, dense=False),
+  # "m4": researchModel("GRU", 2, x, y, epochs,batch_size, dense=False),
+  # "m5": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=False),
+  # "m6": researchModel("LSTM", 2, x, y, epochs,batch_size, dense=False),
   # "m7": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=True),
   # "m8": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=True),
-  "m9": researchModel("GRU", 1, x, y, epochs,batch_size, dense=True),
+  # "m9": researchModel("GRU", 1, x, y, epochs,batch_size, dense=True),
   "m10": researchModel("GRU", 2, x, y, epochs,batch_size, dense=True),
-  "m11": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=True),
-  "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
+  # "m11": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=True),
+  # "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
 }
 
 for i in models:
