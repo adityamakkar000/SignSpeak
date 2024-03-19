@@ -2,8 +2,10 @@ import serial
 import pymongo
 import os
 
+
+
 # connect and setup mongodb database
-client = pymongo.MongoClient("")
+client = pymongo.MongoClient(MONGO_URI)
 db = client['cluster0']
 collection = db[('new_RNN_database')]
 
@@ -48,5 +50,3 @@ while True:
     insert_data(data)
     key = 'b'
     break
-
-

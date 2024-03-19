@@ -26,6 +26,7 @@ def data_upload(model, collection):
              'cateogrial_accuracy': cateogrial_accuracy, 'confusion_matrix': cms}
     collection.insert_one(data)
 
+
 # get encoder model
 class encoderModel:
 
@@ -86,7 +87,6 @@ class researchModel:
     random.seed(self.seed)
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
-
     self.spilts = 5
     self.type = type
     self.final_results = []
@@ -98,7 +98,6 @@ class researchModel:
         f.write(str(autoencoder.count_params()) + type  +'\n')
     y_label_encoded = np.argmax(y, axis=1)
     for i, (train, test) in enumerate(kfold.split(x, y_label_encoded)):
-
       x_train = x[train].astype('float32')
       y_train = y[train].astype('float32')
       x_val = x[test].astype('float32')
