@@ -22,16 +22,17 @@ ser = serial.Serial('COM5', 9600)
 
 # define variables
 state = False
-stop_amount = 2
+stop_amount = 74 #0.1 seconds pause @740Hz
 word = 'none' # word to be recorded
-word_count = 0
+word_count = 0 #current word amount
+word_stop_amount = 50 # words to be stopped at
+state_false_count = 0
 
-# count for word (100 words to be recorded)
-while word_count < 100:
+# count for word
+while word_count < word_stop_amount:
 
   # run while hand sesnor is in off mode
   while state == False:
-
     line = ser.readline().decode('utf-8').strip()
     temp = line
     print("off", ' ', temp)
@@ -40,7 +41,11 @@ while word_count < 100:
     for i in arr:
       sum += i
     if sum < 5000:
+      state_false_count+= 1
+    if state_false_count > stop_amount:
+      state_false_count = 0
       state = True
+
 
   # run while hand sensor is in on mode
   while  state == True:
@@ -78,7 +83,8 @@ while word_count < 100:
 
     # store, and insert data into database and update hand sensor state
     data = {"word": word, "hand": final_arr}
-    insert_data(data)
+    # insert_data(data)
+    print(data) 
     word_count += 1
     print(word_count)
     state = False

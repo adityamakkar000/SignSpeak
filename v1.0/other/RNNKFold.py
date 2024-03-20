@@ -169,7 +169,7 @@ mapping = {'a': [1,0,0,0,0,0,0,0,0,0],
            'h': [0,0,0,0,0,0,0,1,0,0],
            'i': [0,0,0,0,0,0,0,0,1,0],
          'none':[0,0,0,0,0,0,0,0,0,1]}
-
+# fix import path
 data = pandas.read_csv('./Data/Data.csv')
 
 words = data['word']
