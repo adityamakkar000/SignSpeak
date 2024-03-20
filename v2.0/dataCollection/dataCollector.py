@@ -3,16 +3,21 @@ import pymongo
 from dotenv import load_dotenv
 import os
 
+
+# function to insert data into database
+def insert_data(data):
+  collection.insert_one(data)
+
 # connect to databse
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
 
-db = client['cluster0']
-collection = db[('EEDatabase')]
+db = client['signspeak']
+collection = db[('data_collection')]
 print("connected to database")
 
 # setup serial port
-averageRun = 2
+averageRun = 1
 ser = serial.Serial('COM5', 9600)
 
 # define variables
@@ -20,10 +25,6 @@ state = False
 stop_amount = 2
 word = 'none' # word to be recorded
 word_count = 0
-
-# function to insert data into database
-def insert_data(data):
-  collection.insert_one(data)
 
 # count for word (100 words to be recorded)
 while word_count < 100:
