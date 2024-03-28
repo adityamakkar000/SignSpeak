@@ -37,8 +37,8 @@ class encoderModel:
     random.seed(self.seed)
     os.environ['PYTHONHASHSEED']=str(self.seed)
 
-    self.RNNNeurons = 16
-    self.DenseNeurons = 32
+    self.RNNNeurons = 64
+    self.DenseNeurons = 128
 
     if(dense == True):
       self.encoder = models.Sequential([
@@ -200,7 +200,7 @@ models = {
   # "m7": researchModel("SimpleRNN", 1, x, y, epochs,batch_size, dense=True),
   # "m8": researchModel("SimpleRNN", 2, x, y, epochs,batch_size, dense=True),
   # "m9": researchModel("GRU", 1, x, y, epochs,batch_size, dense=True),
-  "m10": researchModel("GRU", 2, x, y, epochs,batch_size, dense=True),
+  "m10": researchModel("GRU", 2, x, y, epochs,batch_size, dense=False),
   # "m11": researchModel("LSTM", 1, x, y, epochs,batch_size, dense=True),
   # "m12":researchModel("LSTM", 2, x, y, epochs,batch_size, dense=True)
 }
