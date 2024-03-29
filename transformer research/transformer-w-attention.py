@@ -1,3 +1,10 @@
+
+# transformer encoder classifier on glove dataset
+# loss of ~ 1 cross entropy after training for ~20 minutes
+# parameters = 195
+
+
+import numpy as np
 import torch
 import torch.nn as nn
 import pandas
@@ -9,6 +16,9 @@ vocab_size = 10
 n_emb = 5
 n_layers = 1
 time_steps = 10
+batch_size = 32
+epochs = 100000
+lr = 4e-3
 
 #encoder layer
 data = pandas.read_csv('./Data.csv')
@@ -78,5 +88,31 @@ parameters = model.parameters()
 s = sum([p.nelement() for p in parameters])
 print(s)
 
+n = int(0.9*x.shape[0])
+Xtr, Ytr = x[:n], y[:n]
+Xval, Yval = x[n:], y[n:]
+
+def get_batches(split):
+  x_values, y_values = {
+      'train': [Xtr, Ytr],
+      'test': [Xval, Yval]
+  }[split]
+  idx = torch.randint(0, x_values.shape[0], (batch_size,))
+  return x_values[idx], y_values[idx]
+
 logits,loss = model(test_x, test_y)
 print(logits, " ", loss)
+
+optim = torch.optim.AdamW(model.parameters(), lr)
+
+for _ in range(epochs):
+
+  x_epoch, y_epoch = get_batches('train')
+  logits, loss = model(x_epoch, y_epoch)
+  optim.zero_grad(set_to_none=True)
+  loss.backward()
+  optim.step()
+  if(_ % 5000 == 0):
+    print(loss.item())
+
+print(loss.item())

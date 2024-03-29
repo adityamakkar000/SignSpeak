@@ -1,4 +1,8 @@
 
+# implmention of encoder only transformer from attention is all you need
+
+
+
 import numpy as np
 import torch
 import torch.nn as nn
