@@ -35,6 +35,12 @@ x = torch.nan_to_num(x).float()
 x = x.view(x.shape[0], -1, n_emb)
 print(x.dtype, " ", y.dtype)
 
+#shuffle around
+indices = np.arange(y.shape[0])
+np.random.shuffle(indices)
+x = x[indices]
+y = y[indices]
+
 print(x.shape, " ", y.shape)
 
 class Head(nn.Module):
