@@ -28,9 +28,6 @@ x = torch.tensor(data.iloc[:,2:time_steps*n_emb + 2].to_numpy())
 x = torch.nan_to_num(x)
 x = x.view(x.shape[0], -1, n_emb)
 
-
-
-
 class FFN(nn.Module):
 
   def __init__(self, n_emb):
