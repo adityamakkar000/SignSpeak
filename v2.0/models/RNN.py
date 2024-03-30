@@ -1,40 +1,28 @@
-from torcheval.metrics.functional import multiclass_f1_score
+
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import pandas
-import numpy as np
+import torch.nn.functional as F
+import time
+from sklearn.model_selection import StratifiedKFold
+from torcheval.metrics.functional import multiclass_f1_score
+import warnings
 
+# hyper parameters
+classes = 10
+n_emb = 5
+n_layers = 1
+n_heads = 5
+n_layers = 3
+time_steps = 10
+batch_size = 32
+epochs = 300000
+learning_rate = 1e-4
+dropout = 0.2
 
-# upload data
-def data_upload(model, collection):
-  cms = np.array(model.confusion_matrixs).tolist()
-  for i in model.final_results:
-    loss, accuracy, f1score, avg_f1score, cateogrial_accuracy = i
-    f1score = f1score.tolist()
-    data  = {'model': model.type, 'loss': loss, 'accuracy': accuracy,
-             'avg_f1score': avg_f1score,'cateogrical_f1score': f1score,
-             'confusion_matrix': cms}
-    collection.insert_one(data)
-
-
-
-class getModel():
-
-  def __init__(self,type=False,stacks=1,dense=True):
-    self.model = 
-
-class model(nn.Module):
-
-  def __init__(self, nin, nout):
-    super.__init__()
-      per.__init__()
-
-  def forward(self, x):
-
-
-data = pandas.read_csv('./data/Data.csv')
-
+#encoder layer
+data = pandas.read_csv('./Data.csv')
 #prepare classes
 y = data['word']
 stoi  = {s:i for i,s in enumerate(sorted(set(y)))}
@@ -43,67 +31,79 @@ y = torch.tensor([encode(s) for i,s in enumerate(y)])
 # y = F.one_hot((y.view(y.shape[0], 1)),10) # don't use one hot with cross entropy loss
 
 #prepare data
-x = torch.tensor(data.iloc[:,2:].to_numpy())
-x = torch.nan_to_num(x)
+x = torch.tensor(data.iloc[:,2:time_steps*n_emb + 2].to_numpy())
+x = torch.nan_to_num(x).float()
+x = x.view(x.shape[0], -1, n_emb)
+print(x.dtype, " ", y.dtype)
+print(x.shape)
 
-
-# prepare classes
-data = pandas.read_csv('./Data.csv')
-
-
-y = data['word']
-stoi  = {s:i for i,s in enumerate(sorted(set(y)))}
-encode = lambda s: stoi[s]
-y = torch.tensor([encode(s) for i,s in enumerate(y)])
-print(y)
-
-# y = F.one_hot((y.view(y.shape[0], 1)),10)
-
-x = data.iloc[:,2:52].to_numpy()
-print(data.iloc[:,2:])
-x = torch.tensor(x, dtype = torch.float32)
-x = torch.nan_to_num(x)
-x = x.view(x.shape[0], -1, 5)
-print(x[0,:5])
-
-torch.manual_seed(1)
 class LSTMStacked(nn.Module):
 
   def __init__(self, batch_first=True, layers=1, dense_layer=False):
     super().__init__()
-    self.layer1 = nn.LSTM(5, 64, num_layers = 2, batch_first = batch_first)
-    self.layer2 = nn.Linear(64,64)
-    self.layer3 = nn.Tanh()
-    self.layer4 = nn.Linear(64,10)
+    self.RNN = nn.LSTM(5, 64, num_layers = layers, batch_first = batch_first)
+    self.output_layers = nn.Sequential(
+        nn.Linear(64,64),
+        nn.Dropout(0.2),
+        nn.Tanh(),
+        nn.Linear(64,10))
 
-  def forward(self, x):
-    self.inter_output, self.inter_h = self.layer1(x)
-    self.layer2out = self.layer2(self.inter_h[-1])
-    self.layer3out = self.layer2out.tanh()
-    self.out = self.layer4(self.layer3out)
+  def forward(self, x, y_targets):
+    hidden_states, (outputs,cell_states) = self.RNN(x)
+    logits = self.output_layers(outputs[-1,:,:])
+    # print(logits.shape, " ", y_targets.shape)
+    logits = logits.view(-1, 10)
+    loss = F.cross_entropy(logits,y_targets)
+    return logits, loss
 
-    return self.out
+model = LSTMStacked(batch_first=True, layers=2)
+print(sum([p.nelement() for p in model.parameters()]))
 
-model1 = LSTMStacked(True,1)
-model2 = LSTMStacked()
+warnings.filterwarnings("ignore", message="Warning: Some classes do not exist in the target.*")
+splits = 5
+kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=1337)
 
-output1 = model1(x)
+for i, (train, test) in enumerate(kfold.split(x,y)):
+  Xtr,Ytr = x[train], y[train]
+  Xval, Yval = x[test], y[test]
+  model = LSTMStacked(batch_first=True, layers=2)
 
-print(output1.shape)
+  def get_batches(split):
+    x_values, y_values = {
+        'train': [Xtr, Ytr],
+        'test': [Xval, Yval]
+    }[split]
+    idx = torch.randint(0, x_values.shape[0], (batch_size,))
+    return x_values[idx], y_values[idx]
 
-epochs = 10000
-optimizer = torch.optim.AdamW(model1.parameters(),lr=1e-3)
+  @torch.no_grad()
+  def get_val_loss(x_val, y_val):
+    model.eval()
+    logits, val_loss = model(x_val, y_val)
+    # val_f1 = multiclass_f1_score(logits, y_val,num_classes=classes, average=None)
+    model.train()
+    return val_loss.item()
 
-for i in range(epochs):
+  optim = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+  start_time = time.time()
+  for _ in range(epochs):
+    x_epoch, y_epoch = get_batches('train')
+    logits, loss = model(x_epoch, y_epoch)
+    f1 = multiclass_f1_score(logits,y_epoch, num_classes=classes, average=None)
+    f1_average = f1.mean()
+    optim.zero_grad(set_to_none=True)
+    loss.backward()
+    optim.step()
+    if(_ % 1000 == 0):
+      end_time = time.time()
+      delta_time = end_time - start_time
+      val_loss = get_val_loss(Xval, Yval)
+      # val_loss, val_f1 = get_val_loss(Xval, Yval)
+      print("epoch", _,
+            "   Training Loss", loss.item(),
+            "    Training F-1", f1_average,
+            "     Val loss", val_loss,
+            # "    Val F-1", val_f1.mean(),
+            "     Time", delta_time)
 
-  x_output = model1(x)
-  loss = F.cross_entropy(x_output,y)
-
-  optimizer.zero_grad(set_to_none=True)
-  loss.backward()
-  f1 = multiclass_f1_score(x_output, y, num_classes=10, average='macro')
-
-  if(i % 100 == 0):
-    print(i, " ",loss.item(), " ", f1)
-
-  optimizer.step()
+      start_time = time.time()
