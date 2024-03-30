@@ -7,7 +7,6 @@ import torch.nn.functional as F
 import time
 from sklearn.model_selection import StratifiedKFold
 from torcheval.metrics.functional import multiclass_f1_score
-import warnings
 
 # hyper parameters
 classes = 10
@@ -56,10 +55,31 @@ class LSTMStacked(nn.Module):
     loss = F.cross_entropy(logits,y_targets)
     return logits, loss
 
+class LSTM(nn.Module):
+
+  def __init__(self,input_size=5,hidden_size=64, output_size=10, batch_first=True, layers=1,
+               dense_layer=False, dropout=0.2):
+    super().__init__()
+    self.RNN = nn.LSTM(input_size, hidden_size, num_layers = layers, batch_first = batch_first)
+    self.output_layers = nn.Sequential(
+        nn.Linear(hidden_size,hidden_size),
+        nn.Dropout(dropout),
+        nn.Tanh(),
+        nn.Linear(hidden_size,output_size)
+    )
+
+  def forward(self, x, y_targets):
+    hidden_states, (outputs, cell_states) = self.RNN(x)
+    logits = self.output_layers(outputs[-1,:,:])
+    # print(logits.shape, " ", y_targets.shape)
+    logits = logits.view(-1, 10)
+    loss = F.cross_entropy(logits,y_targets)
+    return logits, loss
+
+
 model = LSTMStacked(batch_first=True, layers=2)
 print(sum([p.nelement() for p in model.parameters()]))
 
-warnings.filterwarnings("ignore", message="Warning: Some classes do not exist in the target.*")
 splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=1337)
 
