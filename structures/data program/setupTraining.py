@@ -1,5 +1,5 @@
 import sys
-sys.path.append('')
+sys.path.append('C:/Users/vinod/Desktop/divya/signspeak/ASL-Sign-Research/structures')
 
 from models.encoder import Encoder
 import os
@@ -21,6 +21,9 @@ print(os.getcwd())
 batch_size = 32
 epochs = 100000
 learning_rate = 1e-4
+time_steps = 10
+n_emb = 5
+classes=10
 
 #encoder layer
 data = pandas.read_csv('./data/Data.csv')
