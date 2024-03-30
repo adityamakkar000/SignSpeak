@@ -22,7 +22,7 @@ def data_upload(model, collection):
 class getModel():
 
   def __init__(self,type=False,stacks=1,dense=True):
-    self.model =
+    self.model = 
 
 class model(nn.Module):
 
@@ -107,5 +107,3 @@ for i in range(epochs):
     print(i, " ",loss.item(), " ", f1)
 
   optimizer.step()
-
-

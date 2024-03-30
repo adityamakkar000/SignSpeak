@@ -110,7 +110,7 @@ class researchModel:
                                 metrics=[keras.metrics.CategoricalAccuracy(),
                                          keras.metrics.F1Score(average=None, threshold=None)])
       autoencoder.fit(x_train, y_train,
-                  epochs=epochs,
+                  epochs=2,
                   batch_size=batch_size,
                   shuffle=False)
 
@@ -127,10 +127,13 @@ class researchModel:
         TN = sum(sum(confusion_matrix)) - TP - FP - FN
         cat_accuracy.append((TP + TN) / (TP + FP + FN + TN))
       results = autoencoder.evaluate(x_val, y_val, batch_size=64)
+      print(results)
       results[1] = average(cat_accuracy)
       with open('results_new.txt', 'a') as f:
         f.write(str(results[1]) + '\n')
       results.append(average(results[2]))
+      with open('losses.txt', 'a') as f:
+        f.write(str(results[0]) + '\n')
       results.append(cat_accuracy)
       self.final_results.append(results)
 

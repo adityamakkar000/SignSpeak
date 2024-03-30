@@ -1,7 +1,8 @@
-# transformer on glove data with multihead attention
-# 5 heads with total paramters of 195
-# ~ 1 cross entropy after ~440 000 epochs
-#
+# full encoder
+# trained  on 800,000 epcohs
+# parameters  = 400, 5 heads, 4 layer
+# ~0.0016846 training loss and 
+
 
 import numpy as np
 import torch
@@ -15,6 +16,7 @@ vocab_size = 10
 n_emb = 5
 n_layers = 1
 n_heads = 5
+n_layers = 1
 time_steps = 10
 batch_size = 32
 epochs = 1000000
@@ -27,7 +29,7 @@ y = data['word']
 stoi  = {s:i for i,s in enumerate(sorted(set(y)))}
 encode = lambda s: stoi[s]
 y = torch.tensor([encode(s) for i,s in enumerate(y)])
-# y = F.one_hot((y.view(y.shape[0], 1)),10) # don't use one hot with cross entropy loss
+# y = F.one_hot((y.view(y.shape[0], 1)),10) # don't use one hot with cross entropy
 
 #prepare data
 x = torch.tensor(data.iloc[:,2:time_steps*n_emb + 2].to_numpy())
@@ -40,6 +42,8 @@ indices = np.arange(y.shape[0])
 np.random.shuffle(indices)
 x = x[indices]
 y = y[indices]
+
+print(x.shape, " ", y.shape)
 
 class Head(nn.Module):
 
@@ -73,20 +77,49 @@ class MultiHeadAttention(nn.Module):
     logits = torch.cat(multi_head_attention, -1)
     return logits
 
+class FeedForwardNetwork(nn.Module):
+
+  def __init__(self):
+    super().__init__()
+    self.feed_forward = nn.Sequential(
+        nn.Linear(n_emb, n_emb*4),
+        nn.ReLU(),
+        nn.Linear(n_emb*4, n_emb)
+    )
+
+  def forward(self, x):
+    logits = self.feed_forward(x)
+    return logits
+
+class Block(nn.Module):
+
+  def __init__(self):
+    super().__init__()
+    self.heads = MultiHeadAttention()
+    self.feed_forward = FeedForward()
+    self.layer1_norm = nn.LayerNorm(n_emb)
+    self.layer2_norm = nn.LayerNorm(n_emb)
+
+  def forward(self, x):
+    x = self.heads(self.layer1_norm(x))
+    logits = self.feed_forward(self.layer2_norm(x))
+
+    return logits
+
 class Encoder(nn.Module):
 
   def __init__(self):
     super().__init__()
     # self.embedding_table = nn.Embedding(vocab_size, n_emb)
     self.pos_embedding_table = nn.Embedding(time_steps, n_emb)
-    self.self_attention = MultiHeadAttention()
+    self.blocks = nn.Sequential(*[Block() for i in range(n_layers)])
     self.final_layer_norm = nn.LayerNorm(n_emb)
     self.linear_output = nn.Linear(n_emb, vocab_size)
 
   def forward(self, x_input, y_targets):
     pos = self.pos_embedding_table(torch.arange(time_steps))
     x = x_input + pos
-    x = self.self_attention(x)
+    x = self.blocks(x)
     x = self.final_layer_norm(x)
     x = self.linear_output(x)
     logits = x[:,-1,:].view(x.shape[0],1,vocab_size)
