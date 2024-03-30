@@ -1,5 +1,5 @@
 import sys
-sys.path.append('C:/Users/vinod/Desktop/Aditya Things/fullstack stuff/ASL-Sign-Research/structures/')
+sys.path.append('')
 
 from models.encoder import Encoder
 import os
@@ -98,7 +98,7 @@ for i, (train, test) in enumerate(kfold.split(x,y)):
       end_time = time.time()
       delta_time = end_time - start_time
       val_loss, val_f1, cm, accuracy= get_val_stats(Xval, Yval)
-      print(f"epoch {_:<4}   Training Loss {loss.item():.4f}   Val loss {val_loss:.4f}   Val F-1 {val_f1.mean().item():.4f}   Accuracy {torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.4f}")
+      print(f"epoch {_:<4}   Training Loss {loss.item():.4f}   Val loss {val_loss:.4f}   Val F-1 {val_f1.mean().item():.4f}   Accuracy {torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.1f}")
 
 
       start_time = time.time()
