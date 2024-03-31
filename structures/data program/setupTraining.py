@@ -1,5 +1,5 @@
 import sys
-sys.path.append('C:/Users/vinod/Desktop/divya/signspeak/ASL-Sign-Research/structures')
+sys.path.append('C:/Users/vinod/Desktop/Aditya Things/fullstack stuff/ASL-Sign-Research/structures')
 
 from models.encoder import Encoder
 import os
@@ -50,7 +50,7 @@ params = {
   'dropout': 0.2
 }
 model = Encoder(**params)
-model.info()
+model.info(layers=False)
 
 splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=1337)
@@ -92,8 +92,6 @@ for i, (train, test) in enumerate(kfold.split(x,y)):
   for _ in range(epochs):
     x_epoch, y_epoch = get_batches('train')
     logits, loss = model(x_epoch, y_epoch)
-    # f1 = multiclass_f1_score(logits,y_epoch, num_classes=classes, average=None)
-    # f1_average = f1.mean()
     optim.zero_grad(set_to_none=True)
     loss.backward()
     optim.step()
