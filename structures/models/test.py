@@ -2,15 +2,10 @@ import torch
 import torch.nn
 import torch.nn.functional as F
 from encoder import Encoder
+from LSTM import LSTM
+from GRU import GRU
 
 
-params = {
-  'layers': 1,
-  'number_heads': 1,
-  'input_size': 10,
-  'hidden_size': 5,
-  'time_steps': 10,
-  'dropout': 0.2
-}
-model = Encoder(**params)
+
+model = LSTM()
 model.info(layers=True)

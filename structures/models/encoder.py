@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from misc import ModelInfo
 
-
-class Encoder(nn.Module):
+class Encoder(nn.Module, ModelInfo):
 
   def __init__(self,layers=1,
                number_heads = 1,
@@ -47,15 +47,6 @@ class Encoder(nn.Module):
 
     loss = F.cross_entropy(logits, y_targets)
     return logits, loss
-
-  def info(self,layers=False):
-    total_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
-    print(f"Total trainable parameters: {total_params}")
-
-    if layers:
-      print("Layers:")
-      for name, param in self.named_parameters():
-          print(f"Layer: {name}, Size: {param.size()}, Parameters: {param.numel()}")
 
 
 """Old implmentation from attention is all you need"""
