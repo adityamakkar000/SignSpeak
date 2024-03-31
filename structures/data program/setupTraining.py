@@ -72,7 +72,7 @@ model = Encoder(**params)
 model.info(layers=False)
 
 
-g = torch.Generator(device=device).manual_seed(seed)
+g = torch.Generator(device='cpu').manual_seed(seed)
 splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
 

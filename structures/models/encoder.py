@@ -48,7 +48,7 @@ class Encoder(nn.Module):
     loss = F.cross_entropy(logits, y_targets)
     return logits, loss
 
-  def info(self,layers=True):
+  def info(self,layers=False):
     total_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
     print(f"Total trainable parameters: {total_params}")
 
