@@ -21,6 +21,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix
 from torcheval.metrics.functional import multiclass_f1_score
 from torch.nn.utils.rnn import pad_sequence
+import wandb
 
 #cuda setup
 if torch.cuda.is_available():
@@ -43,7 +44,7 @@ classes=10
 device = device
 padding_value = 0
 seed = 1337
-
+a
 data = pandas.read_csv('./data/Data.csv')
 
 #prepare classes
@@ -78,15 +79,32 @@ params = {
 model = LSTM()
 model.info(layers=True)
 
+
 g = torch.Generator(device='cpu').manual_seed(seed)
 splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
+project_name = ""
+
 
 for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
-  Xtr,Ytr = x[train], y[train]
-  Xval, Yval = x[test], y[test]
 
-  model = LSTM()
+  wandb.init(
+      project=project_name,
+      config={
+          "learning_rate": learning_rate,
+          "context length": time_steps,
+          "params": params,
+          "classes": classes,
+          "seed": seed,
+          "steps": epochs,
+          "kfold-split": i+1
+      }
+    )
+
+  Xtr, Ytr = x[train], y[train]
+  Xval, Yval= x[test], y[test]
+
+  model = LSTM(**params)
 
   def get_batches(split):
     x_values, y_values = {
@@ -116,18 +134,36 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
     model.train()
     return val_loss.item(), val_f1, cm, true_accuracy, categorical_accuracy
 
-  optim = torch.optim.AdamW(model.parameters(), lr=0.005)
+  optim = torch.optim.AdamW(model.parameters(), lr=learning_rate)
   start_time = time.time()
+  lossi = []
   for _ in range(epochs):
-    x_epoch, y_epoch = get_batches('train')
+    x_epoch, y_epoch= get_batches('train')
     logits, loss = model(x_epoch, y_epoch)
+
+    lossi.append(loss)
+
     optim.zero_grad(set_to_none=True)
     loss.backward()
     optim.step()
-    if(_ % 500 == 0):
-      end_time = time.time()
-      delta_time = end_time - start_time
-      val_loss, val_f1, cm, accuracy, categorical_accuracy = get_val_stats(Xval, Yval)
-      print(f"epoch {_:<4}   Training Loss:{loss.item():.4f}   Val-loss:{val_loss:.4f}   Val-F-1:{val_f1.mean().item():.4f} Categorical-Accuracy:{torch.tensor(categorical_accuracy).mean().item():.4f}  True-Accuracy:{torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.1f}")
 
-      start_time = time.time()
+    if(_ % 2 == 0):
+
+
+      train_loss = torch.tensor(lossi[_-500:]).mean().item()
+      val_loss, val_f1, cm, accuracy, categorical_accuracy = get_val_stats(Xval, Yval)
+      data = {
+          "train_loss": train_loss,
+          "val_loss": val_loss,
+          "micro_F1": val_f1.cpu().numpy().tolist(),
+          "macro_F1": val_f1.mean().item(),
+          "cat_accuracy": torch.tensor(categorical_accuracy).mean().item(),
+          "true_accuracy": torch.tensor(accuracy).mean().item()
+      }
+      wandb.log(data)
+      if (_ % 500 == 0):
+        end_time = time.time()
+        delta_time = end_time - start_time
+        print(f"epoch {_:<4}   Training Loss:{train_loss:.4f}   Val-loss:{val_loss:.4f}   Val-F-1:{val_f1.mean().item():.4f} Categorical-Accuracy:{torch.tensor(categorical_accuracy).mean().item():.4f}  True-Accuracy:{torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.1f}")
+        start_time = time.time()
+  wandb.finish()
