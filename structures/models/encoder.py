@@ -5,30 +5,36 @@ import torch.nn.functional as F
 
 class Encoder(nn.Module):
 
-  def __init__(self,layers=1, number_heads = 1,input_size=10, hidden_size=5,time_steps=10, dropout=0.2):
+  def __init__(self,layers=1,
+               number_heads = 1,
+               input_size=10,
+               hidden_size=5,
+               time_steps=10,
+               dropout=0.2,
+               device='cpu'):
     super().__init__()
     head_size = hidden_size // number_heads
     self.time_steps = time_steps
+    self.device = device
     self.dim = input_size
-    self.embedding_table = nn.Embedding(input_size, hidden_size)
-    self.pos_embedding_table = nn.Embedding(time_steps, hidden_size)
-    encoder_layer = nn.TransformerEncoderLayer(hidden_size, number_heads,
-                                                    dim_feedforward=4*hidden_size,
-                                                    activation='relu',
-                                                    norm_first=True,
-                                                    bias=True,
-                                                    batch_first=True,
-                                                    )
+    self.embedding_table = nn.Embedding(input_size, hidden_size, device=device)
+    self.pos_embedding_table = nn.Embedding(time_steps, hidden_size, device=device)
+    encoder_layer = nn.TransformerEncoderLayer(hidden_size,
+                                                number_heads,
+                                                dim_feedforward=4*hidden_size,
+                                                activation='relu',
+                                                norm_first=True,
+                                                bias=True,
+                                                batch_first=True,
+                                                device=device )
     self.transformerEncoder = nn.TransformerEncoder(encoder_layer,layers, enable_nested_tensor=False)
     # self.blocks = nn.Sequential(*[Block(hidden_size, head_size, dropout, number_heads) for i in range(layers)])
-    self.final_layer_norm = nn.LayerNorm(hidden_size)
-    self.linear_output = nn.Linear(hidden_size, input_size)
+    self.final_layer_norm = nn.LayerNorm(hidden_size, device=device)
+    self.linear_output = nn.Linear(hidden_size, input_size, device=device)
 
   def forward(self, x_input, y_targets):
 
-    time_array = torch.arange(self.time_steps)
-    # if torch.cuda.is_available:
-    #   time_array = time_array.cuda()
+    time_array = torch.arange(self.time_steps).to(self.device)
     pos = self.pos_embedding_table(time_array)
     x = x_input + pos
     x = self.transformerEncoder(x)
