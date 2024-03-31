@@ -1,10 +1,16 @@
 
 # for local machine only
 import sys
-sys.path.append('C:/Users/vinod/Desktop/Aditya Things/fullstack stuff/ASL-Sign-Research/structures')
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+sys.path.append(os.getenv("p")) #set path to structure/models
 
 # !pip install torcheval # for colab
-from models.encoder import Encoder
+from encoder import Encoder
+from LSTM import LSTM
+from GRU import GRU
 import numpy as np
 import torch
 import torch.nn as nn
@@ -68,9 +74,9 @@ params = {
   'dropout': 0.2,
   'device': device
 }
-model = Encoder(**params)
-model.info(layers=False)
 
+model = LSTM()
+model.info(layers=True)
 
 g = torch.Generator(device='cpu').manual_seed(seed)
 splits = 5
@@ -80,7 +86,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
   Xtr,Ytr = x[train], y[train]
   Xval, Yval = x[test], y[test]
 
-  model = Encoder(**params)
+  model = LSTM()
 
   def get_batches(split):
     x_values, y_values = {
@@ -123,3 +129,5 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
       delta_time = end_time - start_time
       val_loss, val_f1, cm, accuracy, categorical_accuracy = get_val_stats(Xval, Yval)
       print(f"epoch {_:<4}   Training Loss:{loss.item():.4f}   Val-loss:{val_loss:.4f}   Val-F-1:{val_f1.mean().item():.4f} Categorical-Accuracy:{torch.tensor(categorical_accuracy).mean().item():.4f}  True-Accuracy:{torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.1f}")
+
+      start_time = time.time()
