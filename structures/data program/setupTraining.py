@@ -87,7 +87,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
         'train': [Xtr, Ytr],
         'test': [Xval, Yval]
     }[split]
-    idx = torch.randint(0, x_values.shape[0], (batch_size,))
+    idx = torch.randint(0, x_values.shape[0], (batch_size,), generator=g)
     return x_values[idx], y_values[idx]
 
   def get_accuracy(cm):
