@@ -35,8 +35,8 @@ time_steps = 10
 n_emb = 5
 classes=10
 device = device
-padding_value = 0 
-
+padding_value = 0
+seed = 1337
 
 data = pandas.read_csv('./data/Data.csv')
 
@@ -72,8 +72,9 @@ model = Encoder(**params)
 model.info(layers=False)
 
 
+g = torch.Generator(device=device).manual_seed(seed)
 splits = 5
-kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=1337)
+kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
 
 for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
   Xtr,Ytr = x[train], y[train]
