@@ -8,6 +8,7 @@ load_dotenv()
 sys.path.append(os.getenv("p")) #set path to structure/models
 
 # !pip install torcheval # for colab
+# !pip install wandb
 
 import numpy as np
 import random
