@@ -24,7 +24,7 @@ import wandb
 from encoder import Encoder
 from LSTM import LSTM
 from GRU import GRU
-from misc import getDataset
+from DS import getDataset 
 
 #cuda setup
 if torch.cuda.is_available():

@@ -7,5 +7,5 @@ from GRU import GRU
 
 
 
-model = LSTM()
+model = GRU(dense_layer=(True,64))
 model.info(layers=True)
