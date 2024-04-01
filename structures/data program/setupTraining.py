@@ -8,9 +8,7 @@ load_dotenv()
 sys.path.append(os.getenv("p")) #set path to structure/models
 
 # !pip install torcheval # for colab
-from encoder import Encoder
-from LSTM import LSTM
-from GRU import GRU
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -21,7 +19,12 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix
 from torcheval.metrics.functional import multiclass_f1_score
 from torch.nn.utils.rnn import pad_sequence
+from torch.nn.utils.data import Dataset, DataLoader
 import wandb
+from encoder import Encoder
+from LSTM import LSTM
+from GRU import GRU
+from misc import getDataset
 
 #cuda setup
 if torch.cuda.is_available():
@@ -36,7 +39,7 @@ else:
 
 # hyper parameters
 batch_size = 32
-epochs = 100000
+epochs = 1000
 learning_rate = 1e-4
 time_steps = 10
 n_emb = 5
@@ -101,18 +104,16 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
       }
     )
 
-  Xtr, Ytr = x[train], y[train]
-  Xval, Yval= x[test], y[test]
+  Xtr, Ytr = DataLoader(getDataset(x[train], y[train]),
+                          batch_size=batch_size,
+                          shuffle=True,
+                          generator=g)
+  Xval, Yval= DataLoader(getDataset(x[test], y[test]),
+                          batch_size=len(test),
+                          shuffle=False,
+                          generator=g)
 
   model = LSTM(**params)
-
-  def get_batches(split):
-    x_values, y_values = {
-        'train': [Xtr, Ytr],
-        'test': [Xval, Yval]
-    }[split]
-    idx = torch.randint(0, x_values.shape[0], (batch_size,), generator=g)
-    return x_values[idx], y_values[idx]
 
   def get_accuracy(cm):
     TP = np.diag(cm)
@@ -136,21 +137,22 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
 
   optim = torch.optim.AdamW(model.parameters(), lr=learning_rate)
   start_time = time.time()
-  lossi = []
   for _ in range(epochs):
-    x_epoch, y_epoch= get_batches('train')
-    logits, loss = model(x_epoch, y_epoch)
 
-    lossi.append(loss)
+    train_loss_epoch = 0
+    for idx, sample in enumerate(Xtr):
+      # prepare batches from data loader
+      m, l = sample
+      x_batch, y_batch = sample[m], sample[l]
+      logits, loss = model(x_batch, y_batch)
 
-    optim.zero_grad(set_to_none=True)
-    loss.backward()
-    optim.step()
+      # train step
+      optim.zero_grad(set_to_none=True)
+      loss.backward()
+      optim.step()
 
-    if(_ % 2 == 0):
-
-
-      train_loss = torch.tensor(lossi[_-500:]).mean().item()
+      train_loss = loss.item()
+      train_loss_epoch += train_loss
       val_loss, val_f1, cm, accuracy, categorical_accuracy = get_val_stats(Xval, Yval)
       data = {
           "train_loss": train_loss,
@@ -161,9 +163,10 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
           "true_accuracy": torch.tensor(accuracy).mean().item()
       }
       wandb.log(data)
-      if (_ % 500 == 0):
-        end_time = time.time()
-        delta_time = end_time - start_time
-        print(f"epoch {_:<4}   Training Loss:{train_loss:.4f}   Val-loss:{val_loss:.4f}   Val-F-1:{val_f1.mean().item():.4f} Categorical-Accuracy:{torch.tensor(categorical_accuracy).mean().item():.4f}  True-Accuracy:{torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.1f}")
-        start_time = time.time()
+
+    train_loss_epoch /= batch_size
+    end_time = time.time()
+    delta_time = end_time - start_time
+    print(f"epoch {_:<4}   Training Loss:{train_loss_epoch:.4f}   Val-loss:{val_loss:.4f}   Val-F-1:{val_f1.mean().item():.4f} Categorical-Accuracy:{torch.tensor(categorical_accuracy).mean().item():.4f}  True-Accuracy:{torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.1f}")
+    start_time = time.time()
   wandb.finish()
