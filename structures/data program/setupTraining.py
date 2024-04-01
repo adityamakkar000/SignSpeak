@@ -10,21 +10,27 @@ sys.path.append(os.getenv("p")) #set path to structure/models
 # !pip install torcheval # for colab
 
 import numpy as np
+import random
+import pandas
+import time
+import wandb
 import torch
 import torch.nn as nn
-import pandas
 import torch.nn.functional as F
-import time
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import confusion_matrix
 from torcheval.metrics.functional import multiclass_f1_score
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn.utils.data import Dataset, DataLoader
-import wandb
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import confusion_matrix
+
+#local imports
 from encoder import Encoder
 from LSTM import LSTM
 from GRU import GRU
-from DS import getDataset 
+from DS import getDataset
+
+#set determinstic behaviour
+torch.use_deterministic_algorithms(True)
 
 #cuda setup
 if torch.cuda.is_available():
@@ -47,28 +53,36 @@ classes=10
 device = device
 padding_value = 0
 seed = 1337
-a
+
+#set seeds
+torch.manual_seed(seed)
+random.seed(seed)
+np.random.seed(seed)
+
+#read data
 data = pandas.read_csv('./data/Data.csv')
 
 #prepare classes
-y = data['word']
+y = data['word'] # extract classes
 stoi  = {s:i for i,s in enumerate(sorted(set(y)))}
 encode = lambda s: stoi[s]
-y = torch.tensor([encode(s) for i,s in enumerate(y)])
+y = torch.tensor([encode(s) for i,s in enumerate(y)]) # encode letters into words
 # y = F.one_hot((y.view(y.shape[0], 1)),10) # don't use one hot with cross entropy loss
 
 #prepare data
 x = data.iloc[:,2:time_steps*n_emb + 2].to_numpy()
-x = [torch.tensor(i)[~torch.isnan(torch.tensor(i))] for i in x]
-x = pad_sequence([i for i in x], batch_first=True, padding_value=padding_value)
-x = x.view(x.shape[0], -1, n_emb).float()
+x = [torch.tensor(i)[~torch.isnan(torch.tensor(i))] for i in x] # remove nan
+x = pad_sequence([i for i in x], batch_first=True, padding_value=padding_value) # pad
+x = x.view(x.shape[0], -1, n_emb).float() # seperate into B x T x n_emb
 
 # mask_x = (x == padding_value)
 # print(mask_x.shape)
-x,y = x.to(device), y.to(device)
+x,y = x.to(device), y.to(device) # move to device
 print(x.device, y.device)
 print(x.dtype, " ", y.dtype)
 
+
+# set model params for testing
 params = {
   'layers': 10,
   'number_heads': 1,
@@ -79,17 +93,27 @@ params = {
   'device': device
 }
 
+# call models and check layers
 model = LSTM()
 model.info(layers=True)
 
-
+# set torch generator and data loader seed
 g = torch.Generator(device='cpu').manual_seed(seed)
+def seed_worker(worker_id):
+  worker_seed = seed
+  np.random.seed(worker_seed)
+  random.seed(worker_seed)
+
+# create k fold
 splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
-project_name = "LSTM test with batch loader"
 
+project_name = "LSTM test with batch loader" # project name
 
+# enumerate through the splits with train and test
 for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
+
+  # setup wandb recording
   wandb.init(
       project=project_name,
       config={
@@ -103,18 +127,23 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
       }
     )
 
+  # get data loaders for the training and test set
   train = DataLoader(getDataset(x[train], y[train]),
                           batch_size=batch_size,
                           shuffle=True,
+                          worker_init_fn=seed_worker,
                           generator=g)
   val = DataLoader(getDataset(x[test], y[test]),
                           batch_size=len(test),
                           shuffle=False,
+                          worker_init_fn=seed_worker,
                           generator=g)
 
-  torch.manual_seed = seed
-  model = LSTM(**params)
+  # ensure seed is the same
+  torch.manual_seed(seed)
+  model = LSTM(**params) # intialize model
 
+  # accuracy function
   def get_accuracy(cm):
     TP = np.diag(cm)
     TN = np.sum(np.sum(cm,axis=0))-(np.sum(cm, axis = 0) + np.sum(cm, axis=1) - np.diag(cm))
@@ -124,6 +153,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
     cat_acc = TP/(FN+TP)
     return true_acc, cat_acc
 
+  # val data set forward pass
   @torch.no_grad()
   def get_val_stats(val):
     model.eval()
@@ -138,16 +168,16 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
     model.train()
     return val_loss.item(), val_f1, cm, true_accuracy, categorical_accuracy
 
-  optim = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-  start_time = time.time()
+  optim = torch.optim.AdamW(model.parameters(), lr=learning_rate) # set optimizer
+  start_time = time.time() # for time measurment purposes on epoch
   for _ in range(epochs):
 
-    train_loss_epoch = 0
+    train_loss_epoch = 0 # for average on one epoch
     for idx, sample in enumerate(train):
       # prepare batches from data loader
-      m, l = sample
+      m, l = sample # keys
       x_batch, y_batch = sample[m], sample[l]
-      logits, loss = model(x_batch, y_batch)
+      logits, loss = model(x_batch, y_batch) # forward pass
 
       # train step
       optim.zero_grad(set_to_none=True)
@@ -165,7 +195,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
           "cat_accuracy": torch.tensor(categorical_accuracy).mean().item(),
           "true_accuracy": torch.tensor(accuracy).mean().item()
       }
-      wandb.log(data)
+      wandb.log(data) # upload data 
 
     train_loss_epoch /= batch_size
     end_time = time.time()
