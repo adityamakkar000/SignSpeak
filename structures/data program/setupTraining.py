@@ -19,7 +19,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torcheval.metrics.functional import multiclass_f1_score
 from torch.nn.utils.rnn import pad_sequence
-from torch.nn.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix
 
@@ -46,13 +46,14 @@ else:
 # hyper parameters
 batch_size = 32
 epochs = 1000
-learning_rate = 1e-4
+learning_rate = 1e-2
 time_steps = 10
 n_emb = 5
 classes=10
 device = device
 padding_value = 0
 seed = 1337
+type_of_model = "Encoder"
 
 #set seeds
 torch.manual_seed(seed)
@@ -93,8 +94,16 @@ params = {
   'device': device
 }
 
+def get_model(t, params):
+  model_types = {
+    "LSTM": LSTM,
+    "GRU": GRU,
+    "Encoder": Encoder
+                 }
+  return model_types[t](**params)
+
 # call models and check layers
-model = LSTM()
+model = get_model(type_of_model, params)
 model.info(layers=True)
 
 # set torch generator and data loader seed
@@ -109,23 +118,25 @@ splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
 
 project_name = "LSTM test with batch loader" # project name
+wandb_log = False
 
 # enumerate through the splits with train and test
 for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
 
-  # setup wandb recording
-  wandb.init(
-      project=project_name,
-      config={
-          "learning_rate": learning_rate,
-          "context length": time_steps,
-          "params": params,
-          "classes": classes,
-          "seed": seed,
-          "epochs": epochs,
-          "kfold-split": i+1
-      }
-    )
+  if wandb_log:
+    # setup wandb recording
+    wandb.init(
+        project=project_name,
+        config={
+            "learning_rate": learning_rate,
+            "context length": time_steps,
+            "params": params,
+            "classes": classes,
+            "seed": seed,
+            "epochs": epochs,
+            "kfold-split": i+1
+        }
+      )
 
   # get data loaders for the training and test set
   train = DataLoader(getDataset(x[train], y[train]),
@@ -141,7 +152,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
 
   # ensure seed is the same
   torch.manual_seed(seed)
-  model = LSTM(**params) # intialize model
+  model = get_model(type_of_model, params) # intialize model
 
   # accuracy function
   def get_accuracy(cm):
@@ -195,11 +206,13 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
           "cat_accuracy": torch.tensor(categorical_accuracy).mean().item(),
           "true_accuracy": torch.tensor(accuracy).mean().item()
       }
-      wandb.log(data) # upload data 
+      if wandb_log:
+        wandb.log(data) # upload data
 
     train_loss_epoch /= batch_size
     end_time = time.time()
     delta_time = end_time - start_time
     print(f"epoch {_:<4}   Training Loss:{train_loss_epoch:.4f}   Val-loss:{val_loss:.4f}   Val-F-1:{val_f1.mean().item():.4f} Categorical-Accuracy:{torch.tensor(categorical_accuracy).mean().item():.4f}  True-Accuracy:{torch.tensor(accuracy).mean().item():.4f}   Time {delta_time:.1f}")
     start_time = time.time()
-  wandb.finish()
+  if wandb_log:
+    wandb.finish()
