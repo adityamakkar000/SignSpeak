@@ -10,15 +10,23 @@ class GRU(nn.Module, ModelInfo):
     super().__init__()
     self.dense, self.dense_size = dense_layer
     self.output_size = output_size
-    self.RNN = nn.Sequential(
-      nn.Linear(input_size,self.dense_size) if self.dense else None,
-      nn.GRU(self.dense_size if self.dense else input_size,
-              hidden_size,
-              num_layers = layers,
-              batch_first =
-              batch_first,
-              device=device)
-    )
+
+    if self.dense:
+      self.RNN = nn.Sequential(
+        nn.Linear(input_size,self.dense_size),
+        nn.GRU(self.dense_size,
+                hidden_size,
+                num_layers = layers,
+                batch_first = batch_first,
+                device=device)
+      )
+    else:
+      self.RNN = nn.GRU(input_size,
+                        hidden_size,
+                        num_layers=layers,
+                        batch_first=batch_first,
+                        device=device)
+      
     self.output_layers = outputRNN(hidden_size=hidden_size,
                                    output_size=output_size,
                                    device=device,
