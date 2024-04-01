@@ -86,11 +86,10 @@ model.info(layers=True)
 g = torch.Generator(device='cpu').manual_seed(seed)
 splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
-project_name = ""
+project_name = "LSTM test with batch loader"
 
 
 for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
-
   wandb.init(
       project=project_name,
       config={
@@ -99,20 +98,21 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
           "params": params,
           "classes": classes,
           "seed": seed,
-          "steps": epochs,
+          "epochs": epochs,
           "kfold-split": i+1
       }
     )
 
-  Xtr, Ytr = DataLoader(getDataset(x[train], y[train]),
+  train = DataLoader(getDataset(x[train], y[train]),
                           batch_size=batch_size,
                           shuffle=True,
                           generator=g)
-  Xval, Yval= DataLoader(getDataset(x[test], y[test]),
+  val = DataLoader(getDataset(x[test], y[test]),
                           batch_size=len(test),
                           shuffle=False,
                           generator=g)
 
+  torch.manual_seed = seed
   model = LSTM(**params)
 
   def get_accuracy(cm):
@@ -125,13 +125,16 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
     return true_acc, cat_acc
 
   @torch.no_grad()
-  def get_val_stats(x_val, y_val):
+  def get_val_stats(val):
     model.eval()
-    logits, val_loss = model(x_val, y_val)
-    cm = confusion_matrix(y_val.cpu(),
-                          logits.cpu().argmax(axis=1).numpy(), labels=np.arange(10).tolist())
-    val_f1 = multiclass_f1_score(logits, y_val,num_classes=classes, average=None)
-    true_accuracy, categorical_accuracy = get_accuracy(cm)
+    for idx, sample in enumerate(val):
+      l,m = sample
+      x_val, y_val = sample[l], sample[m]
+      logits, val_loss = model(x_val, y_val)
+      cm = confusion_matrix(y_val.cpu(),
+                            logits.cpu().argmax(axis=1).numpy(), labels=np.arange(10).tolist())
+      val_f1 = multiclass_f1_score(logits, y_val,num_classes=classes, average=None)
+      true_accuracy, categorical_accuracy = get_accuracy(cm)
     model.train()
     return val_loss.item(), val_f1, cm, true_accuracy, categorical_accuracy
 
@@ -140,7 +143,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
   for _ in range(epochs):
 
     train_loss_epoch = 0
-    for idx, sample in enumerate(Xtr):
+    for idx, sample in enumerate(train):
       # prepare batches from data loader
       m, l = sample
       x_batch, y_batch = sample[m], sample[l]
@@ -153,7 +156,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
 
       train_loss = loss.item()
       train_loss_epoch += train_loss
-      val_loss, val_f1, cm, accuracy, categorical_accuracy = get_val_stats(Xval, Yval)
+      val_loss, val_f1, cm, accuracy, categorical_accuracy = get_val_stats(val)
       data = {
           "train_loss": train_loss,
           "val_loss": val_loss,
