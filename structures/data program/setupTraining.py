@@ -9,6 +9,7 @@ sys.path.append(os.getenv("p")) #set path to structure/models
 
 # !pip install torcheval # for colab
 # !pip install wandb
+# !pip install pytorch_lightning
 
 import numpy as np
 import random
@@ -33,16 +34,16 @@ from DS import getDataset
 #set determinstic behaviour
 torch.use_deterministic_algorithms(True)
 
-#cuda setup
-if torch.cuda.is_available():
-  print("gpu usage:", torch.cuda.is_available())
-  print("current device", torch.cuda.current_device())
-  print("gpu name:",torch.cuda.get_device_name(0))
-  print("memory allocated:",torch.cuda.memory_allocated())
-  print("memory reserved:", torch.cuda.memory_reserved())
-  device = 'cuda'
-else:
-  device = 'cpu'
+# #cuda setup
+# if torch.cuda.is_available():
+#   print("gpu usage:", torch.cuda.is_available())
+#   print("current device", torch.cuda.current_device())
+#   print("gpu name:",torch.cuda.get_device_name(0))
+#   print("memory allocated:",torch.cuda.memory_allocated())
+#   print("memory reserved:", torch.cuda.memory_reserved())
+#   device = 'cuda'
+# else:
+  # device = 'cpu'
 
 # hyper parameters
 batch_size = 32
@@ -79,10 +80,9 @@ x = x.view(x.shape[0], -1, n_emb).float() # seperate into B x T x n_emb
 
 # mask_x = (x == padding_value)
 # print(mask_x.shape)
-x,y = x.to(device), y.to(device) # move to device
+# x,y = x.to(device), y.to(device) # move to device
 print(x.device, y.device)
 print(x.dtype, " ", y.dtype)
-
 
 # set model params for testing
 params = {
