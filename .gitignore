@@ -1,1 +1,2 @@
 *.env
+/structures/data\ program/lightning_logs/*
