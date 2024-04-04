@@ -25,6 +25,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix
 import lightning as L
+from lightning.pytorch.loggers import WandbLogger
 
 #local imports
 from encoder import Encoder
@@ -120,6 +121,10 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
   torch.manual_seed(seed)
   model = get_model(type_of_model, params) # intialize model
 
-  trainer = L.Trainer(max_epochs=epochs)
+  if wandb_log:
+    run_name = str(i+1) + "fold"
+    wandb_logger = WandbLogger(project=project_name, name=run_name)
+
+  trainer = L.Trainer(max_epochs=epochs, logger=wandb_logger) if wandb_log else L.Trainer(max_epochs=epochs)
   trainer.fit(model, train_dataloaders=train, val_dataloaders=val)
   # accuracy function
