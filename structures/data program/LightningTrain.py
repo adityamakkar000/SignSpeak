@@ -124,7 +124,21 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
   if wandb_log:
     run_name = str(i+1) + "fold"
     wandb_logger = WandbLogger(project=project_name, name=run_name)
+    config={
+            "learning_rate": learning_rate,
+            "context length": time_steps,
+            "params": params,
+            "classes": classes,
+            "seed": seed,
+            "epochs": epochs,
+            "kfold-split": i+1
+    }
+    wandb_logger.experiment.config.update(config)
 
-  trainer = L.Trainer(max_epochs=epochs, logger=wandb_logger) if wandb_log else L.Trainer(max_epochs=epochs)
+  trainer_params = {
+    "max_epochs": epochs,
+    "log_every_n_steps": 1
+                    }
+  trainer = L.Trainer(**trainer_params, logger=wandb_logger) if wandb_log else L.Trainer(**trainer_params)
   trainer.fit(model, train_dataloaders=train, val_dataloaders=val)
   # accuracy function

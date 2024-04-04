@@ -5,7 +5,7 @@ from misc import *
 import lightning as L
 from Lit import LitModel
 
-class GRU(ModelInfo, LitModel):
+class GRU(LitModel):
 
   def __init__(self,
                learning_rate,

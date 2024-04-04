@@ -1,12 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from misc import ModelInfo
 import lightning as L
 from Lit import LitModel
 
 
-class Encoder(ModelInfo, LitModel):
+class Encoder(LitModel):
 
   def __init__(self,learning_rate, layers=1,
                number_heads = 1,

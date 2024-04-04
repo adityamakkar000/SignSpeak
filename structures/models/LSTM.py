@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import lightning as L
-from misc import ModelInfo, outputRNN
+from misc import outputRNN
 from Lit import LitModel
 
-class LSTM(ModelInfo, LitModel):
+class LSTM(LitModel):
 
     def __init__(self,
                  learning_rate,
