@@ -7,18 +7,20 @@ from Lit import LitModel
 
 class Encoder(LitModel):
 
-  def __init__(self,learning_rate, layers=1,
+  def __init__(self,learning_rate,
+               layers=1,
                number_heads = 1,
-               input_size=10,
+               input_size=5,
                hidden_size=5,
+               vocab_size=10,
                time_steps=10,
                dropout=0.2):
     super().__init__()
-    head_size = hidden_size // number_heads
+    # head_size = hidden_size // number_heads
     self.time_steps = time_steps
     self.lr = learning_rate
     self.dim = input_size
-    self.embedding_table = nn.Embedding(input_size, hidden_size)
+    # self.embedding_table = nn.Embedding(input_size, hidden_size) # not needed for now
     self.pos_embedding_table = nn.Embedding(time_steps, hidden_size)
     encoder_layer = nn.TransformerEncoderLayer(hidden_size,
                                                 number_heads,
@@ -30,7 +32,7 @@ class Encoder(LitModel):
     self.transformerEncoder = nn.TransformerEncoder(encoder_layer,layers, enable_nested_tensor=False)
     # self.blocks = nn.Sequential(*[Block(hidden_size, head_size, dropout, number_heads) for i in range(layers)])
     self.final_layer_norm = nn.LayerNorm(hidden_size)
-    self.linear_output = nn.Linear(hidden_size, input_size)
+    self.linear_output = nn.Linear(hidden_size, vocab_size)
 
   def forward(self, x_input, y_targets):
 
@@ -40,10 +42,10 @@ class Encoder(LitModel):
     x = self.transformerEncoder(x)
     x = self.final_layer_norm(x)
     x = self.linear_output(x)
-    logits = x[:,-1,:].view(x.shape[0],1, self.dim)
+    logits = x[:,-1,:].view(x.shape[0],1, self.dim) # ensures shape is proper dim
     B,T,C = logits.shape
-    logits = logits.view(B*T, C)
-    y_targets = y_targets.view(B*T).long()
+    logits = logits.view(B*T, C) # for cross_entropy loss
+    y_targets = y_targets.view(B*T).long() # for cross_entropy
 
     loss = F.cross_entropy(logits, y_targets)
     return logits, loss

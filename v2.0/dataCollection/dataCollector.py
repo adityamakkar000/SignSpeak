@@ -22,10 +22,10 @@ ser = serial.Serial('COM5', 9600)
 
 # define variables
 state = False
-stop_amount = 74 #0.1 seconds pause @740Hz
-word = 'none' # word to be recorded
+stop_amount = 10 #0.1 seconds pause @740Hz
+word = 'g' # word to be recorded
 word_count = 0 #current word amount
-word_stop_amount = 50 # words to be stopped at
+word_stop_amount = 40 # words to be stopped at
 state_false_count = 0
 
 # count for word
@@ -33,19 +33,17 @@ while word_count < word_stop_amount:
 
   # run while hand sesnor is in off mode
   while state == False:
-    line = ser.readline().decode('utf-8').strip()
-    temp = line
+    temp = ser.readline().decode('utf-8').strip()
     print("off", ' ', temp)
     arr = list(map(int,temp.split(' ')))
     sum = 0
     for i in arr:
       sum += i
     if sum < 5000:
-      state_false_count+= 1
+      state_false_count += 1
     if state_false_count > stop_amount:
       state_false_count = 0
       state = True
-
 
   # run while hand sensor is in on mode
   while  state == True:
@@ -56,23 +54,17 @@ while word_count < word_stop_amount:
 
       # setup variables for reading
       sum = 0
-      average_reading = [0,0,0,0,0]
       res_arr = [0,0,0,0,0]
 
       # read data from serial port
-      for i in range(0,averageRun):
-        line = ser.readline().decode('utf-8').strip()
-        if line:
-          current_line = line
-          current_arr = list(map(int,current_line.split(' ')))
-          for i in range(0,5):
-            average_reading[i] += current_arr[i]
+      line = ser.readline().decode('utf-8').strip()
+      if line:
+        res_arr = list(map(int,line.split(' ')))
 
-      # calculate average of readings to minimize noise
-      for i in range(0,5):
-        res_arr[i] = average_reading[i]/averageRun
-        sum += res_arr[i]
+
       print("on", ' ', res_arr)
+      for i in range(5):
+        sum += res_arr[i]
 
       # check if hand is in off mode
       if sum >= 5000:
@@ -82,11 +74,13 @@ while word_count < word_stop_amount:
         final_arr.append(res_arr) # append reading to final array
 
     # store, and insert data into database and update hand sensor state
-    data = {"word": word, "hand": final_arr}
-    # insert_data(data)
-    print(data) 
-    word_count += 1
-    print(word_count)
+    length = len(final_arr)
+    if length > 50 and length < 80:
+      data = {"word": word, "hand": final_arr}
+      insert_data(data)
+      word_count += 1
+      print(word_count)
+
     state = False
 
 # close serial port
