@@ -25,13 +25,13 @@ class ModelInfo:
 
 class outputRNN(nn.Module):
 
-  def __init__(self, hidden_size=64, output_size=10, device='cpu', dropout=0.2):
+  def __init__(self, hidden_size=64, transformed_size=32, output_size=10, dropout=0.2):
     super().__init__()
     self.output_layers = nn.Sequential(
-          nn.Linear(hidden_size,hidden_size, device=device),
+          nn.Linear(hidden_size,transformed_size),
           nn.Dropout(dropout),
           nn.Tanh(),
-          nn.Linear(hidden_size,output_size, device=device)
+          nn.Linear(transformed_size,output_size)
         )
 
   def forward(self, x):
