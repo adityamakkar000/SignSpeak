@@ -25,7 +25,7 @@ state = False
 stop_amount = 10 #0.1 seconds pause @740Hz
 word = 'g' # word to be recorded
 word_count = 0 #current word amount
-word_stop_amount = 40 # words to be stopped at
+word_stop_amount = 8 # words to be stopped at
 state_false_count = 0
 
 # count for word
@@ -79,7 +79,7 @@ while word_count < word_stop_amount:
       data = {"word": word, "hand": final_arr}
       insert_data(data)
       word_count += 1
-      print(word_count)
+      print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 
     state = False
 
