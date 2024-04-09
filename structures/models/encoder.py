@@ -21,7 +21,9 @@ class Encoder(LitModel):
     self.lr = learning_rate
     self.dim = input_size
     # self.embedding_table = nn.Embedding(input_size, hidden_size) # not needed for now
-    self.pos_embedding_table = nn.Embedding(time_steps, hidden_size)
+    self.classification_embedding = nn.Embedding(1,hidden_size)
+    self.time_steps += 1 # add one for postional embedding 
+    self.pos_embedding_table = nn.Embedding(self.time_steps, hidden_size)
     encoder_layer = nn.TransformerEncoderLayer(hidden_size,
                                                 number_heads,
                                                 dim_feedforward=4*hidden_size,
@@ -31,23 +33,19 @@ class Encoder(LitModel):
                                                 batch_first=True)
     self.transformerEncoder = nn.TransformerEncoder(encoder_layer,layers, enable_nested_tensor=False)
     # self.blocks = nn.Sequential(*[Block(hidden_size, head_size, dropout, number_heads) for i in range(layers)])
-    self.final_layer_norm = nn.LayerNorm(hidden_size)
     self.linear_output = nn.Linear(hidden_size, vocab_size)
 
   def forward(self, x_input, y_targets):
-
-    time_array = torch.arange(self.time_steps).to(self.device)
-    pos = self.pos_embedding_table(time_array)
+    classification_embedding = self.classification_embedding(torch.zeros((x_input.shape[0]),dtype=int32).to(self.device))
+    classification_embedding = classification_embedding.view(x_input.shape[0],1,-1)
+    x_input = torch.cat((classification_embedding, x_input), dim=1) # (32 x 1 x hidden_size) + (32 x T x hidden+size)
+    pos = self.pos_embedding_table(torch.arange(self.time_steps).to(self.device))
     x = x_input + pos
     x = self.transformerEncoder(x)
-    x = self.final_layer_norm(x)
-    x = self.linear_output(x)
-    logits = x[:,-1,:].view(x.shape[0],1, self.dim) # ensures shape is proper dim
-    B,T,C = logits.shape
-    logits = logits.view(B*T, C) # for cross_entropy loss
-    y_targets = y_targets.view(B*T).long() # for cross_entropy
+    x = x[:,0,:]
+    logits = self.linear_output(x)
 
-    loss = F.cross_entropy(logits, y_targets)
+    loss = F.cross_entropy(logits, y_targets.long())
     return logits, loss
 
 
