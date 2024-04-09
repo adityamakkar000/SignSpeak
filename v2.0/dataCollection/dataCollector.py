@@ -23,9 +23,9 @@ ser = serial.Serial('COM5', 9600)
 # define variables
 state = False
 stop_amount = 10 #0.1 seconds pause @740Hz
-word = 'g' # word to be recorded
+word = "4"  # word to be recorded
 word_count = 0 #current word amount
-word_stop_amount = 8 # words to be stopped at
+word_stop_amount = 50 #words to be stopped at
 state_false_count = 0
 
 # count for word

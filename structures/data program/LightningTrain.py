@@ -93,16 +93,11 @@ model.info(layers=True)
 
 # set torch generator and data loader seed
 g = torch.Generator(device='cpu').manual_seed(seed)
-def seed_worker(worker_id):
-  worker_seed = seed
-  np.random.seed(worker_seed)
-  random.seed(worker_seed)
-
 # create k fold
 splits = 5
 kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
 
-project_name = "LSTM test with batch loader" # project name
+project_name="SignSpeak"
 wandb_log = False
 
 # enumerate through the splits with train and test
@@ -112,7 +107,6 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
   train = DataLoader(getDataset(x[train], y[train]),
                           batch_size=batch_size,
                           shuffle=True,
-                          worker_init_fn=seed_worker,
                           generator=g)
   val = DataLoader(getDataset(x[test], y[test]),
                           batch_size=len(test))
@@ -122,7 +116,7 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
   model = get_model(type_of_model, params) # intialize model
 
   if wandb_log:
-    run_name = str(i+1) + "fold"
+    run_name = " " + str(i+1) + " fold"
     wandb_logger = WandbLogger(project=project_name, name=run_name)
     config={
             "learning_rate": learning_rate,
