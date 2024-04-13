@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from misc import *
-import lightning as L
 from Lit import LitModel
 
 class GRU(LitModel):
@@ -11,7 +10,7 @@ class GRU(LitModel):
                learning_rate,
                input_size=5,
                hidden_size=64,
-               output_size=10,
+               classes=10,
                batch_first=True,
                layers=1,
                dense_layer=(False, 64),
@@ -19,7 +18,7 @@ class GRU(LitModel):
     super().__init__()
     self.lr = learning_rate
     self.dense, self.dense_size = dense_layer
-    self.output_size = output_size
+    self.classes = classes
 
     if self.dense:
       self.RNN = nn.Sequential(
@@ -36,12 +35,12 @@ class GRU(LitModel):
                         batch_first=batch_first)
 
     self.output_layers = outputRNN(hidden_size=hidden_size,
-                                   output_size=output_size,
+                                   output_size=self.classes,
                                    dropout=dropout)
 
   def forward(self, x, y_targets):
     hidden_states, outputs = self.RNN(x)
     logits = self.output_layers(outputs[-1,:,:])
-    logits = logits.view(-1, self.output_size)
+    logits = logits.view(-1, self.classes)
     loss = F.cross_entropy(logits,y_targets)
     return logits, loss

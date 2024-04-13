@@ -1,6 +1,6 @@
-
-# for local machine only
+# for local machines
 import sys
+import argparse
 import os
 from dotenv import load_dotenv
 
@@ -13,28 +13,25 @@ sys.path.append(os.getenv("path_to_imports")) #set path to structure/models
 
 import numpy as np
 import random
-import pandas
 import time
 import wandb
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torcheval.metrics.functional import multiclass_f1_score
-from torch.nn.utils.rnn import pad_sequence
-from torch.utils.data import Dataset, DataLoader
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import confusion_matrix
 import lightning as L
-from lightning.pytorch.loggers import WandbLogger
+from datetime import datetime
 
 #local imports
 from encoder import Encoder
 from LSTM import LSTM
 from GRU import GRU
-from DS import getDataset
+from DS import ASLDataModule
 
 #set determinstic behaviour
-torch.use_deterministic_algorithms(True)
+torch.use_deterministic_algorithms(True) # don't use on GPU
+
+# setup cli arg parser
+parser = argparse.ArgumentParser(description="get character and word count")
+parser.add_argument('-description', dest='description', type=str, required=True)
+args = parser.parse_args()
 
 # hyper parameters
 batch_size = 32
@@ -43,7 +40,6 @@ learning_rate = 1e-2
 time_steps = 10
 n_emb = 5
 classes=10
-padding_value = 0
 seed = 1337
 
 #set seeds
@@ -51,34 +47,15 @@ torch.manual_seed(seed)
 random.seed(seed)
 np.random.seed(seed)
 
-#read data
-data = pandas.read_csv('./data/Data.csv')
-
-#prepare classes
-y = data['word'] # extract classes
-stoi  = {s:i for i,s in enumerate(sorted(set(y)))}
-encode = lambda s: stoi[s]
-y = torch.tensor([encode(s) for i,s in enumerate(y)]) # encode letters into words
-# y = F.one_hot((y.view(y.shape[0], 1)),10) # don't use one hot with cross entropy loss
-
-#prepare data
-x = data.iloc[:,2:time_steps*n_emb + 2].to_numpy()
-x = [torch.tensor(i)[~torch.isnan(torch.tensor(i))] for i in x] # remove nan
-x = pad_sequence([i for i in x], batch_first=True, padding_value=padding_value) # pad
-x = x.view(x.shape[0], -1, n_emb).float() # seperate into B x T x n_emb
-
-# mask_x = (x == padding_value)
-# print(mask_x.shape)
-print(x.dtype, " ", y.dtype)
-
 # set model params for testing
 params = {
-  'layers': 2,
+  # 'layers': 2,
   'learning_rate': learning_rate,
-  'dense_layer': (True,64)
+  # 'dense_layer': (True,64)
 }
 
 def get_model(t, params):
+  """ take model type and return that with the desired parameters"""
   model_types = {
     "LSTM": LSTM,
     "GRU": GRU,
@@ -87,37 +64,25 @@ def get_model(t, params):
   return model_types[t](**params)
 
 # call models and check layers
-type_of_model = "GRU"
+type_of_model = "Encoder"
 model = get_model(type_of_model, params)
 model.info(layers=True)
 
-# set torch generator and data loader seed
-g = torch.Generator(device='cpu').manual_seed(seed)
-# create k fold
-splits = 5
-kfold = StratifiedKFold(n_splits=splits, shuffle=True, random_state=seed)
 
+splits = 5 #k-fold splits
 project_name="SignSpeak"
 wandb_log = False
 
-# enumerate through the splits with train and test
-for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
-
-  # get data loaders for the training and test set
-  train = DataLoader(getDataset(x[train], y[train]),
-                          batch_size=batch_size,
-                          shuffle=True,
-                          generator=g)
-  val = DataLoader(getDataset(x[test], y[test]),
-                          batch_size=len(test))
+# k-fold number
+for split_number in range(splits):
 
   # ensure seed is the same
   torch.manual_seed(seed)
   model = get_model(type_of_model, params) # intialize model
 
   if wandb_log:
-    run_name = " " + str(i+1) + " fold"
-    wandb_logger = WandbLogger(project=project_name, name=run_name)
+    run_name = type_of_model + "_" + args.description + "_" + str(split_number+1) + "-fold_" + datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    wandb_logger = WandbLogger(project=project_name, name=run_name) # setup wandb logger
     config={
             "learning_rate": learning_rate,
             "context length": time_steps,
@@ -133,6 +98,19 @@ for i, (train, test) in enumerate(kfold.split(x.cpu(),y.cpu())):
     "max_epochs": epochs,
     "log_every_n_steps": 1
                     }
+
+  dataset_params = {
+    'n_emb': n_emb,
+    'time_steps': time_steps,
+    'kfold': split_number,
+    'splits': splits,
+    'seed': seed,
+    'batch_size': batch_size,
+    'shuffle': True,
+    'generator': g
+  }
+
+  # intialize dataset, traniner and fit model
+  dataset = ASLDataModule(**dataset_params)
   trainer = L.Trainer(**trainer_params, logger=wandb_logger) if wandb_log else L.Trainer(**trainer_params)
-  trainer.fit(model, train_dataloaders=train, val_dataloaders=val)
-  # accuracy function
+  trainer.fit(model, dataset)

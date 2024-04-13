@@ -1,9 +1,10 @@
+import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import lightning as L
-from misc import ModelInfo
+from torcheval.metrics.functional import multiclass_f1_score
+from sklearn.metrics import confusion_matrix
 
+from misc import ModelInfo
 
 class LitModel(L.LightningModule, ModelInfo):
 
@@ -26,7 +27,7 @@ class LitModel(L.LightningModule, ModelInfo):
     cm = confusion_matrix(batch[y].cpu(),
                             logits.cpu().argmax(axis=1).numpy(), labels=np.arange(10).tolist())
     true_acc, cat_acc = self.get_accuracy(cm)
-    val_f1 = multiclass_f1_score(logits, batch[y],num_classes=classes, average=None)
+    val_f1 = multiclass_f1_score(logits, batch[y],num_classes=self.classes, average=None)
 
     self.log("val-loss", loss)
     self.log('true accuracy', torch.tensor(true_acc).mean().item())

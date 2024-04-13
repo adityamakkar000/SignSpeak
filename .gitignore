@@ -1,2 +1,4 @@
 *.env
 /structures/data\ program/lightning_logs/*
+/VENV/*
+test.py 

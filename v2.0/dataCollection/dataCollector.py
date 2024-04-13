@@ -2,30 +2,35 @@ import serial
 import pymongo
 from dotenv import load_dotenv
 import os
+import argparse
 
-
-# function to insert data into database
 def insert_data(data):
+  """insert data into databse"""
+
   collection.insert_one(data)
 
 # connect to databse
 load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-
 db = client['signspeak']
 collection = db[('data_collection')]
 print("connected to database")
 
 # setup serial port
-averageRun = 1
 ser = serial.Serial('COM5', 9600)
+
+# setup cli arg parser
+parser = argparse.ArgumentParser(description="get character and word count")
+parser.add_argument('-gesture', dest='gesture', type=str, required=True)
+parser.add_argument('-count', dest='number', type=int, required=True)
+args = parser.parse_args()
 
 # define variables
 state = False
 stop_amount = 10 #0.1 seconds pause @740Hz
-word = "4"  # word to be recorded
-word_count = 0 #current word amount
-word_stop_amount = 50 #words to be stopped at
+word = args.gesture # word to be recorded
+word_count = 0 # current word amount
+word_stop_amount = args.number  # words to be stopped at
 state_false_count = 0
 
 # count for word
@@ -61,7 +66,6 @@ while word_count < word_stop_amount:
       if line:
         res_arr = list(map(int,line.split(' ')))
 
-
       print("on", ' ', res_arr)
       for i in range(5):
         sum += res_arr[i]
@@ -79,6 +83,7 @@ while word_count < word_stop_amount:
       data = {"word": word, "hand": final_arr}
       insert_data(data)
       word_count += 1
+      # indicator for word being inserted, long line to indicate inserting in fast write - easy to see
       print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 
     state = False
