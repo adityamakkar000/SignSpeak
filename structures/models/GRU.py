@@ -10,7 +10,7 @@ class GRU(LitModel):
                learning_rate,
                input_size=5,
                hidden_size=64,
-               classes=10,
+               classes=36,
                batch_first=True,
                layers=1,
                dense_layer=(False, 64),

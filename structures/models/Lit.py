@@ -25,7 +25,7 @@ class LitModel(L.LightningModule, ModelInfo):
     logits, loss =  self(batch[x],batch[y])
     logits_argmax = torch.argmax(logits, dim=-1)
     cm = confusion_matrix(batch[y].cpu(),
-                            logits.cpu().argmax(axis=1).numpy(), labels=np.arange(10).tolist())
+                            logits.cpu().argmax(axis=1).numpy(), labels=np.arange(self.classes).tolist())
     true_acc, cat_acc = self.get_accuracy(cm)
     val_f1 = multiclass_f1_score(logits, batch[y],num_classes=self.classes, average=None)
 

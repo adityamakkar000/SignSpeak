@@ -9,7 +9,7 @@ sys.path.append(os.getenv("path_to_imports")) #set path to structure/models
 
 # !pip install torcheval # for colab
 # !pip install wandb
-# !pip install pytorch_lightning
+# !pip install Lightning
 
 import numpy as np
 import random
@@ -17,6 +17,7 @@ import time
 import wandb
 import torch
 import lightning as L
+from lightning.pytorch.loggers import WandbLogger
 from datetime import datetime
 
 #local imports
@@ -30,13 +31,14 @@ torch.use_deterministic_algorithms(True) # don't use on GPU
 
 # setup cli arg parser
 parser = argparse.ArgumentParser(description="get character and word count")
-parser.add_argument('-description', dest='description', type=str, required=True)
+parser.add_argument('-description', dest='description', type=str, required=False)
 args = parser.parse_args()
 
+
 # hyper parameters
-batch_size = 32
-epochs = 1000
-learning_rate = 1e-2
+batch_size = 128
+epochs = 600
+learning_rate = 1e-4
 time_steps = 10
 n_emb = 5
 classes=10
@@ -49,9 +51,10 @@ np.random.seed(seed)
 
 # set model params for testing
 params = {
-  # 'layers': 2,
+  'layers': 5,
   'learning_rate': learning_rate,
-  # 'dense_layer': (True,64)
+  
+
 }
 
 def get_model(t, params):
@@ -71,7 +74,8 @@ model.info(layers=True)
 
 splits = 5 #k-fold splits
 project_name="SignSpeak"
-wandb_log = False
+wandb_log = True if args.description else False
+print(wandb_log, " ", args)
 
 # k-fold number
 for split_number in range(splits):
@@ -90,14 +94,14 @@ for split_number in range(splits):
             "classes": classes,
             "seed": seed,
             "epochs": epochs,
-            "kfold-split": i+1
+            "kfold-split": split_number+1
     }
     wandb_logger.experiment.config.update(config)
 
   trainer_params = {
     "max_epochs": epochs,
     "log_every_n_steps": 1
-                    }
+  }
 
   dataset_params = {
     'n_emb': n_emb,
@@ -106,11 +110,13 @@ for split_number in range(splits):
     'splits': splits,
     'seed': seed,
     'batch_size': batch_size,
-    'shuffle': True,
-    'generator': g
+    'shuffle': True
   }
 
   # intialize dataset, traniner and fit model
   dataset = ASLDataModule(**dataset_params)
   trainer = L.Trainer(**trainer_params, logger=wandb_logger) if wandb_log else L.Trainer(**trainer_params)
   trainer.fit(model, dataset)
+
+  if wandb_log:
+    wandb.finish()

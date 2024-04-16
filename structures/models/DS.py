@@ -47,7 +47,7 @@ class ASLDataModule(L.LightningDataModule, Dataset):
                n_emb,
                batch_size,
                shuffle=True,
-               dir='./data/Data.csv',
+               dir='./data/test2.csv',
                ):
     super().__init__()
 
@@ -72,12 +72,11 @@ class ASLDataModule(L.LightningDataModule, Dataset):
   def prepare_data(self):
     """prepare data as tensors"""
 
-    data = pandas.read_csv(self.data_dir)
-    y = data['word'] # extract classes
+    data = pandas.read_csv(self.data_dir, dtype={"word": "string"})
+    y = data["word"] # extract classes
     stoi  = {s:i for i,s in enumerate(sorted(set(y)))} # assign indexes to each possible class (a - z, 1-10)
     encode = lambda s: stoi[s] # inline function to covert character to class number
     y = torch.tensor([encode(s) for i,s in enumerate(y)]) # encode letters into words
-
 
     """
     x is a 3-dim tensor
@@ -106,8 +105,8 @@ class ASLDataModule(L.LightningDataModule, Dataset):
   def train_dataloader(self):
     """called when trainer.fit() is used"""
 
-    return DataLoader(self.train_dataset, **self.params)
+    return DataLoader(self.train_dataset, **self.params, num_workers=7)
 
   def val_dataloader(self):
     """called when trainer.val() is used in training cycle"""
-    return DataLoader(self.val_dataset, batch_size=len(self.val_dataset))
+    return DataLoader(self.val_dataset, batch_size=len(self.val_dataset), num_workers=7)
