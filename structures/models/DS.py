@@ -73,7 +73,10 @@ class ASLDataModule(L.LightningDataModule, Dataset):
     """prepare data as tensors"""
 
     data = pandas.read_csv(self.data_dir, dtype={"word": "string"})
-    y = data["word"] # extract classes
+    y = data['word'] # extract classes
+    number = [str(i) for i in range(20,30)]
+    indexes = [i for i,s in enumerate(y) if s not in number] # remove numbers
+    y = [s for i,s in enumerate(y) if s not in number]
     stoi  = {s:i for i,s in enumerate(sorted(set(y)))} # assign indexes to each possible class (a - z, 1-10)
     encode = lambda s: stoi[s] # inline function to covert character to class number
     y = torch.tensor([encode(s) for i,s in enumerate(y)]) # encode letters into words
@@ -90,6 +93,10 @@ class ASLDataModule(L.LightningDataModule, Dataset):
     x = [torch.tensor(i)[~torch.isnan(torch.tensor(i))] for i in x] # remove nan values
     x = pad_sequence([i for i in x], batch_first=True, padding_value=0) # pad values to same sequence length
     x = x.view(x.shape[0], self.time_steps, self.n_emb).float() # seperate into B x time_steps x n_emb
+    x = x[indexes] # remove numbers from labels
+
+    print(x.shape, "   ", y.shape)
+
 
     self.length = x.shape[0]
 
@@ -105,8 +112,8 @@ class ASLDataModule(L.LightningDataModule, Dataset):
   def train_dataloader(self):
     """called when trainer.fit() is used"""
 
-    return DataLoader(self.train_dataset, **self.params, num_workers=7)
+    return DataLoader(self.train_dataset, **self.params)
 
   def val_dataloader(self):
     """called when trainer.val() is used in training cycle"""
-    return DataLoader(self.val_dataset, batch_size=len(self.val_dataset), num_workers=7)
+    return DataLoader(self.val_dataset, batch_size=len(self.val_dataset))

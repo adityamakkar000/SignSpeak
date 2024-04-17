@@ -36,12 +36,12 @@ args = parser.parse_args()
 
 
 # hyper parameters
-batch_size = 128
+batch_size = 64
 epochs = 600
 learning_rate = 1e-4
-time_steps = 10
+time_steps = 60
 n_emb = 5
-classes=10
+classes=36
 seed = 1337
 
 #set seeds
@@ -51,10 +51,11 @@ np.random.seed(seed)
 
 # set model params for testing
 params = {
-  'layers': 5,
+  'layers': 2,
+  # 'time_steps': time_steps,
+  'classes': classes,
+  'hidden_size': 64,
   'learning_rate': learning_rate,
-  
-
 }
 
 def get_model(t, params):

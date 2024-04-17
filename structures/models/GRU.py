@@ -16,10 +16,13 @@ class GRU(LitModel):
                dense_layer=(False, 64),
                dropout=0.2):
     super().__init__()
+
+    # set hyperparameters
     self.lr = learning_rate
     self.dense, self.dense_size = dense_layer
     self.classes = classes
 
+    # if dense before RNN
     if self.dense:
       self.RNN = nn.Sequential(
         nn.Linear(input_size,self.dense_size),
@@ -39,8 +42,7 @@ class GRU(LitModel):
                                    dropout=dropout)
 
   def forward(self, x, y_targets):
-    hidden_states, outputs = self.RNN(x)
-    logits = self.output_layers(outputs[-1,:,:])
-    logits = logits.view(-1, self.classes)
-    loss = F.cross_entropy(logits,y_targets)
+    hidden_states, outputs = self.RNN(x) # hidden states of all cells, outputs of last cells
+    logits = self.output_layers(outputs[-1,:,:]) # output of last cell into dense layer
+    loss = F.cross_entropy(logits,y_targets) # cross entropy loss
     return logits, loss

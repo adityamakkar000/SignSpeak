@@ -16,10 +16,13 @@ class LSTM(LitModel):
                  dense_layer=(False, 64),
                  dropout=0.2):
         super().__init__()
+
+        # set hyperparameters
         self.dense, self.dense_size = dense_layer
         self.classes = classes
         self.lr = learning_rate
 
+        # if dense before RNN
         if self.dense:
             self.RNN = nn.Sequential(
                 nn.Linear(input_size, self.dense_size),
@@ -39,8 +42,7 @@ class LSTM(LitModel):
                                        dropout=dropout)
 
     def forward(self, x, y_targets):
-        hidden_states, (outputs, cell_states) = self.RNN(x)
-        logits = self.output_layers(outputs[-1, :, :])
-        logits = logits.view(-1, self.classes)
+        hidden_states, (outputs, cell_states) = self.RNN(x) # hidden states of all cells, outputs of last cells
+        logits = self.output_layers(outputs[-1, :, :]) # outputs (batch, classes)
         loss = F.cross_entropy(logits, y_targets)
         return logits, loss

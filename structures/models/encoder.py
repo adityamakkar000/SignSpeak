@@ -14,7 +14,7 @@ class Encoder(LitModel):
                layers=1,
                number_heads = 1,
                input_size=5,
-               hidden_size=64,
+               hidden_size=32,
                classes=36,
                time_steps=10,
                dropout=0.2):
@@ -23,6 +23,8 @@ class Encoder(LitModel):
     self.lr = learning_rate # used in optimizers for lightning module
     self.dim = input_size
     self.classes = classes
+
+
     self.classification_embedding = nn.Embedding(1,hidden_size) # CLS token
     self.embedding_table = nn.Linear(input_size,hidden_size) # input embedding table
     self.time_steps = time_steps + 1 # add one for postional embedding
