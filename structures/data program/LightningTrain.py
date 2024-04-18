@@ -30,22 +30,40 @@ from DS import ASLDataModule
 torch.use_deterministic_algorithms(True) # don't use on GPU
 
 # setup cli arg parser
-parser = argparse.ArgumentParser(description="get character and word count")
-parser.add_argument('-description', dest='description', type=str, required=False)
-# add argument for model type and params
-parser.add_argument('-model', dest='model', type=str, required=False)
+parser = argparse.ArgumentParser(description="model traning")
+parser.add_argument('-description', dest='description', type=str, required=False) # description for wandb
+
+# general params
+parser.add_argument('-time_steps', dest='time_steps', type=int, required=False) # time steps
+parser.add_argument('-lr', dest='lr', type=float, required=False) # learning rate
+parser.add_argument('-batch_size', dest='batch_size', type=int, required=False) # batch size
+parser.add_argument('-epochs', dest='epochs', type=int, required=False) # epochs
+
+parser.add_argument('-model', dest='model', type=str, required=True) # get type of model
+parser.add_argument('-layers', dest='layers', type=int, required=False) # number of layers
+parser.add_argument('-hidden_size', dest='hidden_size', type=int, required=False) # hidden size
+
+# RNN params
+parser.add_argument('-dense_layer', dest='dense_layer', type=bool, required=False) # dense layer
+parser.add_argument('-dense_size', dest='dense_size', type=int, required=False) # dense size
+
+
+# encoder params
+parser.add_argument('-number_heads', dest='number_heads', type=int, required=False) # number of heads
+
 
 args = parser.parse_args()
 
 
 # hyper parameters
-batch_size = 64
-epochs = 600
-learning_rate = 1e-4
-time_steps = 60
+batch_size = args.batch_size if args.batch_size else 64
+epochs = args.epochs if args.epochs else  600
+learning_rate = args.lr if args.lr else 1e-4
+time_steps = args.time_steps if args.time_steps else 60
 n_emb = 5
 classes=36
 seed = 1337
+
 
 #set seeds
 torch.manual_seed(seed)
@@ -54,20 +72,20 @@ np.random.seed(seed)
 
 # set model params for testing
 encoder_params = {
-  'layers': 2,
+  'layers': args.layers if args.layers else 1,
   'time_steps': time_steps,
-  'number_heads': 1,
-  'input_size': n_emb,
+  'number_heads': args.number_heads if args.number_heads else 1,
+  'input_size': 5,
   'classes': classes,
-  'hidden_size': n_emb,
+  'hidden_size': args.hidden_size if args.hidden_size else 5,
   'learning_rate': learning_rate,
 }
 
 RNN_params = {
-  'input_size': n_emb,
-  'layers': 2,
-  'dense_layer': (False, 64),
-  'hidden_size': 64,
+  'input_size': 5,
+  'layers': args.layers if args.layers else 1,
+  'dense_layer': (True, args.dense_size) if args.dense_layer else (False, 64),
+  'hidden_size': args.hidden_size if args.hidden_size else 64,
   'classes': classes,
   'learning_rate': learning_rate,
 }

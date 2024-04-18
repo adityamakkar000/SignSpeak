@@ -22,6 +22,7 @@ class LitModel(L.LightningModule, ModelInfo):
 
     optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
     # TODO: Add scheduler
+    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
     return optimizer
 
   def validation_step(self, batch, batch_idx):
