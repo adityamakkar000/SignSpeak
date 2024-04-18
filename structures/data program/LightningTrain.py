@@ -32,6 +32,9 @@ torch.use_deterministic_algorithms(True) # don't use on GPU
 # setup cli arg parser
 parser = argparse.ArgumentParser(description="get character and word count")
 parser.add_argument('-description', dest='description', type=str, required=False)
+# add argument for model type and params
+parser.add_argument('-model', dest='model', type=str, required=False)
+
 args = parser.parse_args()
 
 
@@ -50,12 +53,29 @@ random.seed(seed)
 np.random.seed(seed)
 
 # set model params for testing
-params = {
+encoder_params = {
   'layers': 2,
-  # 'time_steps': time_steps,
+  'time_steps': time_steps,
+  'number_heads': 1,
+  'input_size': n_emb,
   'classes': classes,
-  'hidden_size': 64,
+  'hidden_size': n_emb,
   'learning_rate': learning_rate,
+}
+
+RNN_params = {
+  'input_size': n_emb,
+  'layers': 2,
+  'dense_layer': (False, 64),
+  'hidden_size': 64,
+  'classes': classes,
+  'learning_rate': learning_rate,
+}
+
+params = {
+          "Encoder": encoder_params,
+          "LSTM": RNN_params,
+          "GRU": RNN_params
 }
 
 def get_model(t, params):
@@ -65,7 +85,7 @@ def get_model(t, params):
     "GRU": GRU,
     "Encoder": Encoder
   }
-  return model_types[t](**params)
+  return model_types[t](**params[t])
 
 # call models and check layers
 type_of_model = "Encoder"
