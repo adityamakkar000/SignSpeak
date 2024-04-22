@@ -4,7 +4,7 @@ from torch.nn.utils.rnn import pad_sequence
 import lightning as L
 import pandas
 from sklearn.model_selection import StratifiedKFold
-
+import numpy as np
 
 class getDataset(Dataset):
   """ pytorch Dataset object generation
@@ -17,8 +17,8 @@ class getDataset(Dataset):
   def __init__(self, x, y):
     """Assign tensors to self states"""
 
-    self.x = x
-    self.y = y
+    self.x = torch.from_numpy(x)
+    self.y = torch.from_numpy(y)
 
   def __len__(self):
     """Length is the number of examples in a dataset (0-indexed demension = a single gesture)"""
@@ -69,9 +69,9 @@ class ASLDataModule(L.LightningDataModule, Dataset):
       'generator': self.generator
     }
 
-  def prepare_data(self):
+  def setup(self, stage):
     """prepare data as tensors"""
-
+  
     data = pandas.read_csv(self.data_dir, dtype={"word": "string"})
     y = data['word'] # extract classes
     number = [str(i) for i in range(20,30)]
@@ -79,8 +79,8 @@ class ASLDataModule(L.LightningDataModule, Dataset):
     y = [s for i,s in enumerate(y) if s not in number]
     stoi  = {s:i for i,s in enumerate(sorted(set(y)))} # assign indexes to each possible class (a - z, 1-10)
     encode = lambda s: stoi[s] # inline function to covert character to class number
-    y = torch.tensor([encode(s) for i,s in enumerate(y)]) # encode letters into words
-
+    y = np.array([encode(s) for i,s in enumerate(y)]) # encode letters into words
+    
     """
     x is a 3-dim tensor
     dim-0 gives the different measurments (keep all for all samples)
@@ -90,7 +90,7 @@ class ASLDataModule(L.LightningDataModule, Dataset):
     """
     x = data.iloc[:,2:self.time_steps*self.n_emb + 2].to_numpy()
 
-    x = [torch.tensor(i)[~torch.isnan(torch.tensor(i))] for i in x] # remove nan values
+    x = [np.array(i)[~torch.isnan(np.array(i))] for i in x] # remove nan values
     x = pad_sequence([i for i in x], batch_first=True, padding_value=0) # pad values to same sequence length
     x = x.view(x.shape[0], self.time_steps, self.n_emb).float() # seperate into B x time_steps x n_emb
     x = x[indexes] # remove numbers from labels
@@ -112,7 +112,7 @@ class ASLDataModule(L.LightningDataModule, Dataset):
   def train_dataloader(self):
     """called when trainer.fit() is used"""
 
-    return DataLoader(self.train_dataset, **self.params)
+    return DataLoader(self.train_dataset, num_workers=0, **self.params)
 
   def val_dataloader(self):
     """called when trainer.val() is used in training cycle"""

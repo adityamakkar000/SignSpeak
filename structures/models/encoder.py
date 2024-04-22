@@ -34,7 +34,6 @@ class Encoder(LitModel):
                                                 dim_feedforward=4*hidden_size,
                                                 activation='relu',
                                                 norm_first=True,
-                                                bias=True,
                                                 batch_first=True)
     self.transformerEncoder = nn.TransformerEncoder(encoder_layer,layers, enable_nested_tensor=False)
     self.linear_output = nn.Linear(hidden_size, classes)
@@ -49,6 +48,5 @@ class Encoder(LitModel):
     x = self.transformerEncoder(x)
     x = x[:,0,:]
     logits = self.linear_output(x)
-
     loss = F.cross_entropy(logits, y_targets.long())
     return logits, loss
