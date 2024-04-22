@@ -25,6 +25,9 @@ class ModelInfo:
       for name, param in self.named_parameters():
           print(f"Layer: {name}, Size: {param.size()}, Parameters: {param.numel()}, Device: {param.device}")
 
+  def total_params(self):
+    return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
 class outputRNN(nn.Module):
 
   def __init__(self, hidden_size=64, transformed_size=32, output_size=10, dropout=0.2):

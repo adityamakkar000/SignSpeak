@@ -48,5 +48,5 @@ class Encoder(LitModel):
     x = self.transformerEncoder(x)
     x = x[:,0,:]
     logits = self.linear_output(x)
-    loss = F.cross_entropy(logits, y_targets.long())
+    loss = F.cross_entropy(logits, y_targets)
     return logits, loss

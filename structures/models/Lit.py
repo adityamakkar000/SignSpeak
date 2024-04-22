@@ -13,6 +13,7 @@ class LitModel(L.LightningModule, ModelInfo):
     """ training step for the model """
 
     x,y = batch
+    
     logits, loss = self(batch[x],batch[y]) # forward pass
     self.log('training-loss', loss)
 
