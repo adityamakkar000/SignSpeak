@@ -109,6 +109,7 @@ def get_model(t, params):
 type_of_model = "Encoder"
 model = get_model(type_of_model, params)
 model.info(layers=True)
+print(model.total_params())
 
 
 splits = 5 #k-fold splits
@@ -129,6 +130,7 @@ for split_number in range(splits):
     config={
             "learning_rate": learning_rate,
             "context length": time_steps,
+            "total parameters": model.total_params(),
             "params": params,
             "classes": classes,
             "seed": seed,
