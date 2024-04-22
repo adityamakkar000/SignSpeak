@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-sys.path.append("/Users/Aarav/ASL-Sign-Research/structures/models") #set path to structure/models
+sys.path.append(os.getenv("path_to_imports")) #set path to structure/models
 
 # !pip install torcheval # for colab
 # !pip install wandb
