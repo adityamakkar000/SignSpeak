@@ -1,3 +1,0 @@
-REM run different tests
-
-

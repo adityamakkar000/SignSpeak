@@ -1,6 +1,7 @@
 *.env
-/structures/data\ program/lightning_logs/*
-/structures/data\ program/wandb/*
-/structures/data\ program/SignSpeak/*
+/src/experiments/lightning_logs/*
+/src/experiments/wandb/*
+/src/experiments/SignSpeak/*
 /VENV/*
-test.py
+*.pyc
+test.py 
