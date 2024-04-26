@@ -44,7 +44,7 @@ class GRU(LitModel):
                                    output_size=self.classes,
                                    dropout=dropout)
 
-  def forward(self, x: Tensor, y_targets: Tensor) -> Tuple[Tensor, Tensor]:
+  def forward(self, x: Tensor, x_mask: Tensor, y_targets: Tensor) -> Tuple[Tensor, Tensor]:
     hidden_states, outputs = self.RNN(x) # hidden states of all cells, outputs of last cells
     logits = self.output_layers(outputs[-1,:,:]) # output of last cell into dense layer
     loss = F.cross_entropy(logits,y_targets) # cross entropy loss

@@ -16,9 +16,9 @@ class LitModel(L.LightningModule, ModelInfo):
   def training_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
     """ training step for the model """
 
-    x,y = batch
+    x,x_padding, y = batch
 
-    logits, loss = self(batch[x],batch[y]) # forward pass
+    logits, loss = self(batch[x],batch[x_padding],batch[y]) # forward pass
     self.log('training-loss', loss)
 
     return loss
@@ -32,9 +32,9 @@ class LitModel(L.LightningModule, ModelInfo):
 
   def validation_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
 
-    x,y = batch
+    x,x_padding, y = batch
 
-    logits, loss =  self(batch[x],batch[y]) # forward pass
+    logits, loss =  self(batch[x],batch[x_padding],batch[y]) # forward pass
     logits_argmax = torch.argmax(logits, dim=-1) # get argmax of logits
     # confusion matrix
     cm = confusion_matrix(batch[y].cpu(),

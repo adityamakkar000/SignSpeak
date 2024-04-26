@@ -4,4 +4,4 @@
 /src/experiments/SignSpeak/*
 /VENV/*
 *.pyc
-test.py 
+test.*

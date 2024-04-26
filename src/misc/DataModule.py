@@ -6,34 +6,39 @@ import pandas
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 
+from typing import Dict, List, Tuple
+from torch import Tensor
+
 class getDataset(Dataset):
-  """ pytorch Dataset object generation
+    """ pytorch Dataset object generation
 
   Turn a tensor into a dataset
   e.g Take in ASL measuremnts tensors and tensor labels and turn it into an iterable
   dataset to be used by Pytorch DataLoader
 
   """
-  def __init__(self, x, y):
-    """Assign tensors to self states"""
+    def __init__(self, x: List[List[List[int]]], x_padding: List[List[list[bool]]], y: List[int]):
+        """Assign tensors to self states"""
 
-    self.x = torch.from_numpy(x).float()
-    self.y = torch.from_numpy(y).long()
+        self.x = torch.from_numpy(x).float()
+        self.x_padding = torch.from_numpy(x_padding).float()
+        self.y = torch.from_numpy(y).long()
 
-  def __len__(self):
-    """Length is the number of examples in a dataset (0-indexed demension = a single gesture)"""
+    def __len__(self) -> int:
+        """Length is the number of examples in a dataset (0-indexed demension = a single gesture)"""
 
-    return self.x.shape[0]
+        return self.x.shape[0]
 
-  def __getitem__(self, idx):
-    """get item and it's label with given index idx"""
+    def __getitem__(self, idx: int) -> Dict[str, Tensor]:
+        """get item and it's label with given index idx"""
 
-    sample = {
-      "measurement": self.x[idx],
-      "label": self.y[idx]
-    }
+        sample = {
+          "measurement": self.x[idx],
+          "measurement_padding": self.x_padding[idx],
+          "label": self.y[idx]
+        }
 
-    return sample
+        return sample
 
 
 class ASLDataModule(L.LightningDataModule, Dataset):
@@ -69,13 +74,13 @@ class ASLDataModule(L.LightningDataModule, Dataset):
       'generator': self.generator
     }
 
-  def setup(self, stage):
+  def setup(self, stage: str):
 
     """ prepare data as tensors """
 
     data = pandas.read_csv(self.data_dir, dtype={"word": "string"})
     y = data['word'] # extract classes
-    number = [str(i) for i in range(20,30)]
+    number = [str(i) for i in range(20,30)] # range set to 20-30 for numbers/ do not remove 1-10
     indexes = [i for i,s in enumerate(y) if s not in number] # remove numbers
     y = [s for i,s in enumerate(y) if s not in number]
     stoi  = {s:i for i,s in enumerate(sorted(set(y)))} # assign indexes to each possible class (a - z, 1-10)
@@ -93,7 +98,11 @@ class ASLDataModule(L.LightningDataModule, Dataset):
     """
 
     x = [i[~np.isnan(i)] for i in data.iloc[:, 2:self.time_steps*5+2].to_numpy()] # get values without nan
-    x = np.array([np.pad(i, (0,self.time_steps*5-len(i)),'constant', constant_values=0.0) for i in x]).reshape(-1, self.time_steps, 5) # pad sequence
+    x_lengths = [[0.0 for k in range(len(i)//5)] for i in x]
+
+    x_padding = np.array([np.pad(i, (0, self.time_steps - len(i)), 'constant', constant_values=1.0) for i in x_lengths]).reshape(-1, self.time_steps) # pad sequence
+    x = np.array([np.pad(i, (0, self.time_steps * 5 - len(i)), 'constant', constant_values=0.0) for i in x]).reshape(-1, self.time_steps, 5) # pad sequence
+
     x = x[indexes] # remove numbers from labels
 
     print(x.shape, "   ", y.shape)
@@ -106,15 +115,15 @@ class ASLDataModule(L.LightningDataModule, Dataset):
 
     for i, (train, test) in enumerate(kfold.split(x,y)):
       if i == self.kfold:
-        self.train_dataset = getDataset(x[train], y[train])
-        self.val_dataset = getDataset(x[test], y[test])
+        self.train_dataset = getDataset(x[train],x_padding[train], y[train])
+        self.val_dataset = getDataset(x[test], x_padding[test],y[test])
         break
 
-  def train_dataloader(self):
+  def train_dataloader(self) -> DataLoader:
     """ called when trainer.fit() is used """
 
     return DataLoader(self.train_dataset, **self.params)
 
-  def val_dataloader(self):
+  def val_dataloader(self) -> DataLoader:
     """called when trainer.val() is used in training cycle"""
     return DataLoader(self.val_dataset, batch_size=len(self.val_dataset))

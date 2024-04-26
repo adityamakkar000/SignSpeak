@@ -42,14 +42,22 @@ class Encoder(LitModel):
     self.transformerEncoder = nn.TransformerEncoder(encoder_layer,layers, enable_nested_tensor=False)
     self.linear_output = nn.Linear(hidden_size, classes)
 
-  def forward(self, x_input: Tensor, y_targets: Tensor) -> Tuple[Tensor, Tensor]:
+  def forward(self, x_input: Tensor, x_mask: Tensor, y_targets: Tensor) -> Tuple[Tensor, Tensor]:
+
+    assert(x_input.shape[0] == x_mask.shape[0] == y_targets.shape[0])
+
     classification_embedding = self.classification_embedding(torch.zeros((x_input.shape[0]),dtype=int).to(self.device))
     classification_embedding = torch.unsqueeze(classification_embedding,dim=1)
+
     x_input = self.embedding_table(x_input)
     x_input = torch.cat((classification_embedding, x_input), dim=1) # (32 x 1 x hidden_size) + (32 x T x hidden+size)
+
+    x_mask = torch.cat((torch.ones((x_mask.shape[0],1)), x_mask), dim=1)
+
     pos = self.pos_embedding_table(torch.arange(self.time_steps).to(self.device))
     x = x_input + pos # add positional embedding to vector embeddings
-    x = self.transformerEncoder(x)
+
+    x = self.transformerEncoder(x, src_key_padding_mask=x_mask)
     x = x[:,0,:]
     logits = self.linear_output(x)
     loss = F.cross_entropy(logits, y_targets)
