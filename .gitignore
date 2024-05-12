@@ -5,3 +5,4 @@
 /VENV/*
 *.pyc
 test.*
+/src/experiments/experiment.sh

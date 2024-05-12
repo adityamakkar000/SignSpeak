@@ -7,7 +7,7 @@ def send_client():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     server_ip = "192.168.2.201"
-    server_port = 5000
+    server_port = 8000
 
     client.connect((server_ip, server_port))
 
