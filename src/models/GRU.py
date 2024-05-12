@@ -2,7 +2,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from src.models.generalModels import *
-from src.models.LightningModel import LitModel
+from src.models.LightniingModel import LitModel
 
 from typing import Tuple
 from torch import Tensor
