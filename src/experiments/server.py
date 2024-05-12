@@ -28,9 +28,7 @@ def send_server():
         file.close()
 
         subprocess.call(['sh', fname])
-    
+
     client.close()
 
 send_server()
-
-    
