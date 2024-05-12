@@ -5,7 +5,7 @@ import subprocess
 def send_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server_ip = "127.0.0.1"
+    server_ip = "192.168.2.201"
     port = 8000
 
     #bind
