@@ -6,7 +6,7 @@ epochs=1000
 model="Encoder"
 hidden_size=32
 layers=1
-description="encoder_higherDim"
+description="Test_on_server"
 
 python LightningTrain.py \
   -layers $layers \

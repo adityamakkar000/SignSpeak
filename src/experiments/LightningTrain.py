@@ -40,7 +40,7 @@ parser.add_argument('-lr', dest='lr', type=float, required=False) # learning rat
 parser.add_argument('-batch_size', dest='batch_size', type=int, required=False) # batch size
 parser.add_argument('-epochs', dest='epochs', type=int, required=False) # epochs
 
-parser.add_argument('-model', dest='model', type=str, required=True) # get type of model
+parser.add_argument('-model', dest='model', type=str, required=False) # get type of model
 parser.add_argument('-layers', dest='layers', type=int, required=False) # number of layers
 parser.add_argument('-hidden_size', dest='hidden_size', type=int, required=False) # hidden size
 
@@ -107,7 +107,7 @@ def get_model(t, params):
   return model_types[t](**params[t])
 
 # call models and check layers
-type_of_model = "Encoder"
+type_of_model = args.model if args.model else "Encoder"
 model = get_model(type_of_model, params)
 model.info(layers=True)
 print(model.total_params())
