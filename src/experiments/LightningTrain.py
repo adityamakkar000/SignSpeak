@@ -28,7 +28,7 @@ from src.models.GRU import GRU
 from src.misc.DataModule import ASLDataModule
 
 #set determinstic behaviour
-torch.use_deterministic_algorithms(True) # don't use on GPU
+# torch.use_deterministic_algorithms(True) # don't use on GPU
 
 # setup cli arg parser
 parser = argparse.ArgumentParser(description="model traning")
