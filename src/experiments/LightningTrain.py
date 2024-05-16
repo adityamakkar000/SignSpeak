@@ -45,26 +45,35 @@ parser.add_argument('-layers', dest='layers', type=int, required=False) # number
 parser.add_argument('-hidden_size', dest='hidden_size', type=int, required=False) # hidden size
 
 # RNN params
-parser.add_argument('-dense_layer', dest='dense_layer', type=bool, required=False) # dense layer
+parser.add_argument('-dense_layer', dest='dense_layer', action='store_true', required=False) # dense layer
 parser.add_argument('-dense_size', dest='dense_size', type=int, required=False) # dense size
 
 
 # encoder params
 parser.add_argument('-number_heads', dest='number_heads', type=int, required=False) # number of heads
 
+parser.set_defaults(dense_layer=False,
+                    batch_size=64,
+                    epochs=600,
+                    time_steps=79,
+                    lr=1e-4,
+                    model="Encoder",
+                    layers=1,
+                    hidden_size=5,
+                    number_heads=1,
+                    dense_size=64)
 
 args = parser.parse_args()
 
 
 # hyper parameters
-batch_size = args.batch_size if args.batch_size else 64
-epochs = args.epochs if args.epochs else  600
-learning_rate = args.lr if args.lr else 1e-4
-time_steps = args.time_steps if args.time_steps else 60
+batch_size = args.batch_size
+epochs = args.epochs
+learning_rate = args.lr
+time_steps = args.time_steps
 n_emb = 5
-classes=36
+classes = 36
 seed = 1337
-
 
 #set seeds
 torch.manual_seed(seed)
@@ -73,20 +82,20 @@ np.random.seed(seed)
 
 # set model params for testing
 encoder_params = {
-  'layers': args.layers if args.layers else 1,
+  'layers': args.layers,
   'time_steps': time_steps,
-  'number_heads': args.number_heads if args.number_heads else 1,
+  'number_heads': args.number_heads,
   'input_size': 5,
   'classes': classes,
-  'hidden_size': args.hidden_size if args.hidden_size else 5,
+  'hidden_size': args.hidden_size,
   'learning_rate': learning_rate,
 }
 
 RNN_params = {
   'input_size': 5,
-  'layers': args.layers if args.layers else 1,
-  'dense_layer': (True, args.dense_size) if args.dense_layer else (False, 64),
-  'hidden_size': args.hidden_size if args.hidden_size else 64,
+  'layers': args.layers,
+  'dense_layer': (True, args.dense_size) if args.dense_layer else (False, args.dense_size),
+  'hidden_size': args.hidden_size,
   'classes': classes,
   'learning_rate': learning_rate,
 }
@@ -107,7 +116,7 @@ def get_model(t, params):
   return model_types[t](**params[t])
 
 # call models and check layers
-type_of_model = args.model if args.model else "Encoder"
+type_of_model = args.model
 model = get_model(type_of_model, params)
 model.info(layers=True)
 print(model.total_params())
