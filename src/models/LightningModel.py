@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 import lightning as L
+import wandb
+from lightning.pytorch.loggers.wandb import WandbLogger
 from torcheval.metrics.functional import multiclass_f1_score
 from sklearn.metrics import confusion_matrix
 
@@ -12,40 +14,62 @@ from torch import Tensor
 
 class LitModel(L.LightningModule, ModelInfo):
 
+    def training_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
+        """training step for the model"""
 
-  def training_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
-    """ training step for the model """
+        x, x_padding, y = batch
 
-    x,x_padding, y = batch
+        logits, loss = self(batch[x], batch[x_padding], batch[y])  # forward pass
+        self.log("training-loss", loss)
 
-    logits, loss = self(batch[x],batch[x_padding],batch[y]) # forward pass
-    self.log('training-loss', loss)
+        return loss
 
-    return loss
+    def configure_optimizers(self):
 
-  def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="min", factor=0.1, patience=10
+        )
 
-    optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
-    # TODO: Add scheduler
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-    return optimizer
+        optim = {
+            "optimizer": optimizer,
+            "lr_scheduler": scheduler,
+            "monitor": "val-loss",
+        }
 
-  def validation_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
+        return optim
 
-    x,x_padding, y = batch
+    def validation_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
 
-    logits, loss =  self(batch[x],batch[x_padding],batch[y]) # forward pass
-    logits_argmax = torch.argmax(logits, dim=-1) # get argmax of logits
-    # confusion matrix
-    cm = confusion_matrix(batch[y].cpu(),
-                            logits.cpu().argmax(axis=1).numpy(), labels=np.arange(self.classes).tolist())
-    true_acc, cat_acc = self.get_accuracy(cm) # call accuracy from misc.py
-    val_f1 = multiclass_f1_score(logits, batch[y],num_classes=self.classes, average=None) # f1-score
+        x, x_padding, y = batch
 
-    # log metrics
-    self.log("val-loss", loss)
-    self.log('true accuracy', torch.tensor(true_acc).mean().item())
-    self.log('categorical accuracy', torch.tensor(cat_acc).mean().item())
-    self.log('f1-score', val_f1.mean().item())
+        logits, loss = self(batch[x], batch[x_padding], batch[y])  # forward pass
+        logits_argmax = torch.argmax(logits, dim=-1)  # get argmax of logits
+        # confusion matrix
+        cm = confusion_matrix(
+            batch[y].cpu(),
+            logits.cpu().argmax(axis=1).numpy(),
+            labels=np.arange(self.classes).tolist(),
+        )
+        true_acc, cat_acc = self.get_accuracy(cm)  # call accuracy from misc.py
+        val_f1 = multiclass_f1_score(
+            logits, batch[y], num_classes=self.classes, average=None
+        )  # f1-score
 
-    return loss
+        # log metrics
+        self.log("val-loss", loss)
+        self.log("categorical accuracy", torch.tensor(cat_acc).mean().item())
+        self.log("f1-score", val_f1.mean().item())
+        self.log("learning_rate", self.lr)
+
+        if isinstance(self.logger, WandbLogger):
+            plot = wandb.plot.confusion_matrix(
+                probs=None,
+                y_true=np.array(batch[y].cpu()),
+                preds=np.array(logits_argmax.cpu()),
+                class_names=np.arange(self.classes).tolist(),
+            )
+            self.logger.experiment.log({"confusion_matrix": plot})
+
+        val_loss = loss
+        return val_loss

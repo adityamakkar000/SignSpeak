@@ -2,13 +2,14 @@ import socket
 import os
 import subprocess
 
+
 def send_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     server_ip = "192.168.2.201"
     port = 8000
 
-    #bind
+    # bind
     server.bind((server_ip, port))
 
     server.listen()
@@ -27,8 +28,9 @@ def send_server():
 
         file.close()
 
-        subprocess.call(['sh', fname])
+        subprocess.call(["sh", fname])
 
     client.close()
+
 
 send_server()

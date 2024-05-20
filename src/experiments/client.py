@@ -1,6 +1,8 @@
 import socket
 import os
 import time
+
+
 def send_client():
 
     file_name = "train.sh"
@@ -24,4 +26,6 @@ def send_client():
 
     file.close()
     client.close()
+
+
 send_client()
