@@ -26,15 +26,14 @@ class LitModel(L.LightningModule, ModelInfo):
 
     def configure_optimizers(self):
 
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode="min", factor=0.1, patience=10
+        self.optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        scheduler = torch.optim.lr_scheduler.StepLR(
+            self.optimizer, step_size=50, gamma=0.1
         )
 
         optim = {
-            "optimizer": optimizer,
+            "optimizer": self.optimizer,
             "lr_scheduler": scheduler,
-            "monitor": "val-loss",
         }
 
         return optim
@@ -57,10 +56,10 @@ class LitModel(L.LightningModule, ModelInfo):
         )  # f1-score
 
         # log metrics
-        self.log("val-loss", loss)
-        self.log("categorical accuracy", torch.tensor(cat_acc).mean().item())
-        self.log("f1-score", val_f1.mean().item())
-        self.log("learning_rate", self.lr)
+        self.log("val-loss", loss, prog_bar=True)
+        self.log("categorical accuracy", torch.tensor(cat_acc).mean().item(), prog_bar=True)
+        self.log("f1-score", val_f1.mean().item(), prog_bar=True)
+        self.log("learning_rate", self.optimizer.param_groups[0]['lr'], prog_bar=True)
 
         if isinstance(self.logger, WandbLogger):
             plot = wandb.plot.confusion_matrix(

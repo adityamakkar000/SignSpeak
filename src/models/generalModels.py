@@ -43,7 +43,7 @@ class ModelInfo:
 class outputRNN(nn.Module):
 
     def __init__(
-        self, hidden_size=64, transformed_size=32, output_size=10, dropout=0.2
+        self, hidden_size=64, transformed_size=64, output_size=10, dropout=0.2
     ):
         """Output layer for RNN models"""
         super().__init__()

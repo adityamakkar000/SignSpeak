@@ -26,6 +26,7 @@ number_heads=0
 # Description for run
 description="GRU_Test"
 
+
 python LightningTrain.py \
   -layers $layers \
   -model $model \

@@ -44,7 +44,7 @@ class LSTM(LitModel):
             )
 
         self.output_layers = outputRNN(
-            hidden_size=hidden_size, output_size=self.classes, dropout=dropout
+            hidden_size=hidden_size, transformed_size=64 ,output_size=self.classes, dropout=dropout
         )
 
     def forward(

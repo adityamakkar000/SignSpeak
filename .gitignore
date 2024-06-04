@@ -6,3 +6,4 @@
 *.pyc
 test.*
 /src/experiments/experiment.sh
+/old/*

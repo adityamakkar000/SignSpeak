@@ -19,6 +19,8 @@ import torch
 import lightning as L
 from lightning.pytorch.loggers import WandbLogger
 from datetime import datetime
+from lightning.pytorch.profilers import AdvancedProfiler
+from lightning.pytorch.callbacks import DeviceStatsMonitor
 
 # local imports
 from src.models.encoder import Encoder
@@ -63,11 +65,15 @@ parser.add_argument(
     "-dense_size", dest="dense_size", type=int, required=False
 )  # dense size
 
-
 # encoder params
 parser.add_argument(
     "-number_heads", dest="number_heads", type=int, required=False
 )  # number of heads
+
+parser.add_argument(
+    "-project_name", dest="project_name", type=str, help="project name for wandb logging", required=False
+)
+
 
 parser.set_defaults(
     dense_layer=False,
@@ -80,6 +86,7 @@ parser.set_defaults(
     hidden_size=5,
     number_heads=1,
     dense_size=64,
+    project_name="SignSpeak"
 )
 
 args = parser.parse_args()
@@ -138,7 +145,7 @@ print(model.total_params())
 
 
 splits = 5  # k-fold splits
-project_name = "SignSpeak"
+project_name = args.project_name
 wandb_log = True if args.description else False
 print(wandb_log, " ", args)
 
@@ -174,6 +181,7 @@ for split_number in range(splits):
         }
         wandb_logger.experiment.config.update(config)
 
+    pf = AdvancedProfiler(dirpath="./", filename="profile.txt")
     trainer_params = {"max_epochs": epochs, "log_every_n_steps": 1}
 
     dataset_params = {
