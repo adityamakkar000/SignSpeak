@@ -27,11 +27,9 @@ class LitModel(L.LightningModule, ModelInfo):
     def configure_optimizers(self):
 
         self.optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
-        # scheduler = torch.optim.lr_scheduler.StepLR(
-        #     self.optimizer, step_size=100, gamma=0.2
-        # )
+        
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, mode='min',factor=0.1
+            self.optimizer, mode='min',factor=0.5, min_lr=0.0001, patience=20
         )
 
         optim = {

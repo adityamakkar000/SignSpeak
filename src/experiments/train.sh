@@ -1,12 +1,12 @@
 # Basic setup
-lr=0.01
+lr=0.001
 time_steps=79
 batch_size=64
-epochs=1000
+epochs=250
 
 # General Model params
 
-hidden_size=32
+hidden_size=64
 
 # RNN params
 
@@ -16,7 +16,7 @@ number_heads=0
 # Description for run
 
 
-for model in "GRU" "LSTM"
+for model in "LSTM"
   do
     for l in 1 2
       do
@@ -33,7 +33,7 @@ for model in "GRU" "LSTM"
             fi
 
 
-            description="RNN_sweep_Aarav"
+            description="fixedLR_Sweep_Aarav"
 
             python LightningTrain.py \
               -layers $layers \
