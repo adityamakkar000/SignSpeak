@@ -8,7 +8,7 @@ epochs=5
 
 # General Model params
 
-model="LSTM"
+model=""
 hidden_size=32
 
 # RNN params
