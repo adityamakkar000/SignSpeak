@@ -24,15 +24,15 @@ class GRU(LitModel):
 
         # set hyperparameters
         self.lr = learning_rate
-        self.dense, self.dense_size = dense_layer
+        self.dense = dense_layer
         self.classes = classes
 
         # if dense before RNN
         if self.dense:
             self.RNN = nn.Sequential(
-                nn.Linear(input_size, self.dense_size),
+                nn.Linear(input_size, 2 * hidden_size),
                 nn.GRU(
-                    self.dense_size,
+                    2 * hidden_size,
                     hidden_size,
                     num_layers=layers,
                     batch_first=batch_first,
@@ -44,7 +44,7 @@ class GRU(LitModel):
             )
 
         self.output_layers = outputRNN(
-            hidden_size=hidden_size, output_size=self.classes, dropout=dropout
+            hidden_size=hidden_size, transformed_size=2*hidden_size, output_size=self.classes, dropout=dropout
         )
 
     def forward(
