@@ -17,22 +17,22 @@ class LSTM(LitModel):
         classes=36,
         batch_first=True,
         layers=1,
-        dense_layer=(False, 64),
+        dense_layer= False,
         dropout=0.2,
     ):
         super().__init__()
 
         # set hyperparameters
-        self.dense, self.dense_size = dense_layer
+        self.dense = dense_layer
         self.classes = classes
         self.lr = learning_rate
 
         # if dense before RNN
         if self.dense:
             self.RNN = nn.Sequential(
-                nn.Linear(input_size, self.dense_size),
+                nn.Linear(input_size, 2 * hidden_size),
                 nn.LSTM(
-                    self.dense_size,
+                    2 * hidden_size,
                     hidden_size,
                     num_layers=layers,
                     batch_first=batch_first,
@@ -44,7 +44,7 @@ class LSTM(LitModel):
             )
 
         self.output_layers = outputRNN(
-            hidden_size=hidden_size, transformed_size=64 ,output_size=self.classes, dropout=dropout
+            hidden_size=hidden_size, transformed_size=2*hidden_size ,output_size=self.classes, dropout=dropout
         )
 
     def forward(

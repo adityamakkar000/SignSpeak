@@ -8,7 +8,7 @@ epochs=5
 
 # General Model params
 
-model="GRU"
+model="LSTM"
 hidden_size=32
 
 # RNN params
@@ -26,7 +26,7 @@ number_heads=0
 
 # Description for run
 # description="GRU_Test"
-project_name="GRU_Test"
+project_name="${model}_Test"
 
 for lr in 0.01 0.001 0.0001
   do

@@ -61,9 +61,6 @@ parser.add_argument(
 parser.add_argument(
     "-dense_layer", dest="dense_layer", action="store_true", required=False
 )  # dense layer
-parser.add_argument(
-    "-dense_size", dest="dense_size", type=int, required=False
-)  # dense size
 
 # encoder params
 parser.add_argument(
@@ -85,7 +82,6 @@ parser.set_defaults(
     layers=1,
     hidden_size=5,
     number_heads=1,
-    dense_size=64,
     project_name="SignSpeak"
 )
 
@@ -120,9 +116,7 @@ encoder_params = {
 RNN_params = {
     "input_size": 5,
     "layers": args.layers,
-    "dense_layer": (
-        (True, args.dense_size) if args.dense_layer else (False, args.dense_size)
-    ),
+    "dense_layer": True if args.dense_layer else False,
     "hidden_size": args.hidden_size,
     "classes": classes,
     "learning_rate": learning_rate,
