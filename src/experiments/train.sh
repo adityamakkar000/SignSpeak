@@ -2,7 +2,7 @@
 lr=0.001
 time_steps=79
 batch_size=64
-epochs=1
+epochs=250
 
 # General Model params
 
@@ -21,7 +21,7 @@ for model in "Encoder"; do
 
       layers=$l
 
-      description="Encoder_sweep"
+      description="Encoder_sweep_aarav"
 
       python LightningTrain.py \
         -layers $layers \
