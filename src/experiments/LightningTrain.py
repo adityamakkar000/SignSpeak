@@ -149,7 +149,6 @@ for split_number in range(splits):
     # ensure seed is the same
     torch.manual_seed(seed)
     model = get_model(type_of_model, params)  # intialize model
-
     if wandb_log:
         run_name = (
             type_of_model
