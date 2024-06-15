@@ -72,7 +72,7 @@ class Encoder(LitModel):
             (classification_embedding, x_input), dim=1
         )  # (32 x 1 x hidden_size) + (32 x T x hidden+size)
 
-        x_mask = torch.cat((torch.ones((x_mask.shape[0], 1)), x_mask), dim=1)
+        x_mask = torch.cat((torch.ones((x_mask.shape[0], 1), device=self.device), x_mask), dim=1)
 
         pos = self.pos_embedding_table(torch.arange(self.time_steps).to(self.device))
         x = x_input + pos  # add positional embedding to vector embeddings
