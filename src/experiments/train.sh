@@ -2,7 +2,7 @@
 lr=0.001
 time_steps=79
 batch_size=64
-epochs=250
+epochs=500
 
 # General Model params
 

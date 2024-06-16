@@ -24,6 +24,7 @@ from lightning.pytorch.callbacks import DeviceStatsMonitor
 
 # local imports
 from src.models.encoder import Encoder
+from src.models.encoder import Encoder_self_weighting
 from src.models.LSTM import LSTM
 from src.models.GRU import GRU
 from src.misc.DataModule import ASLDataModule
@@ -36,6 +37,11 @@ parser = argparse.ArgumentParser(description="model traning")
 parser.add_argument(
     "-description", dest="description", type=str, required=False
 )  # description for wandb
+
+parser.add_argument(
+    "-test", dest="test", action="store_true", required=False
+)  # train mode
+
 
 # general params
 parser.add_argument(
@@ -71,6 +77,8 @@ parser.add_argument(
     "-project_name", dest="project_name", type=str, help="project name for wandb logging", required=False
 )
 
+parser
+
 
 parser.set_defaults(
     dense_layer=False,
@@ -82,7 +90,8 @@ parser.set_defaults(
     layers=1,
     hidden_size=5,
     number_heads=1,
-    project_name="SignSpeak"
+    project_name="SignSpeak",
+    test=False
 )
 
 args = parser.parse_args()
@@ -113,6 +122,7 @@ encoder_params = {
     "learning_rate": learning_rate,
 }
 
+
 RNN_params = {
     "input_size": 5,
     "layers": args.layers,
@@ -122,12 +132,12 @@ RNN_params = {
     "learning_rate": learning_rate,
 }
 
-params = {"Encoder": encoder_params, "LSTM": RNN_params, "GRU": RNN_params}
+params = {"Encoder": encoder_params, "LSTM": RNN_params, "GRU": RNN_params, "EncoderSW": encoder_params}
 
 
 def get_model(t, params):
     """take model type and return that with the desired parameters"""
-    model_types = {"LSTM": LSTM, "GRU": GRU, "Encoder": Encoder}
+    model_types = {"LSTM": LSTM, "GRU": GRU, "Encoder": Encoder, "EncoderSW": Encoder_self_weighting}
     return model_types[t](**params[t])
 
 
@@ -175,7 +185,7 @@ for split_number in range(splits):
         wandb_logger.experiment.config.update(config)
 
     pf = AdvancedProfiler(dirpath="./", filename="profile.txt")
-    trainer_params = {"max_epochs": epochs, "log_every_n_steps": 1}
+    trainer_params = {"max_epochs": epochs, "log_every_n_steps": 1, "fast_dev_run": True if args.test else False}
 
     dataset_params = {
         "n_emb": n_emb,

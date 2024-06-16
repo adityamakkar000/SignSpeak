@@ -59,25 +59,3 @@ class outputRNN(nn.Module):
         logits = self.output_layers(x)  # (batch, classes)
         return logits
 
-
-class residualBlock(nn.Module):
-
-    def __init__(self, input_dim, output_dim, dropout=0.2):
-        """Residual block"""
-        super().__init__()
-
-        self.linear_block = nn.Sequential(
-            nn.Linear(input_dim, output_dim),
-            nn.ReLU(),
-            nn.Linear(output_dim, output_dim),
-            nn.Dropout(dropout),
-        )
-
-        self.linear_skip = nn.Linear(input_dim, output_dim)
-        self.layer_norm = nn.LayerNorm(output_dim)
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass"""
-        x = self.linear_block(x) + self.linear_skip(x)
-        x = self.layer_norm(x)
-        return x
