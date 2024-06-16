@@ -124,7 +124,10 @@ class Encoder_self_weighting(LitModel):
         self.transformerEncoder = nn.TransformerEncoder(
             encoder_layer, layers, enable_nested_tensor=False
             )
-        self.weighting = nn.parameter.Parameter(data = torch.randn((1,time_steps)), requires_grad=True)
+        weighting_tensor = torch.empty(1, self.time_steps, device=self.device)
+        init = torch.sqrt(torch.tensor([1], device=self.device))[0]
+        nn.init.uniform_(weighting_tensor,-init, init )
+        self.weighting = nn.parameter.Parameter(data = weighting_tensor, requires_grad=True)
         self.ReLU = nn.ReLU()
 
         self.linear_output = nn.Linear(hidden_size, classes)
@@ -150,5 +153,3 @@ class Encoder_self_weighting(LitModel):
 
         loss = F.cross_entropy(logits, y_targets)
         return logits, loss
-
-
