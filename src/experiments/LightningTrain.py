@@ -25,6 +25,7 @@ from lightning.pytorch.callbacks import DeviceStatsMonitor
 # local imports
 from src.models.encoder import Encoder
 from src.models.encoder import Encoder_self_weighting
+from src.models.encoder import EncoderCOVN
 from src.models.LSTM import LSTM
 from src.models.GRU import GRU
 from src.misc.DataModule import ASLDataModule
@@ -132,12 +133,16 @@ RNN_params = {
     "learning_rate": learning_rate,
 }
 
-params = {"Encoder": encoder_params, "LSTM": RNN_params, "GRU": RNN_params, "EncoderSW": encoder_params}
+params = {"Encoder": encoder_params,
+          "LSTM": RNN_params,
+          "GRU": RNN_params,
+          "EncoderSW": encoder_params,
+          "EncoderCONV": encoder_params}
 
 
 def get_model(t, params):
     """take model type and return that with the desired parameters"""
-    model_types = {"LSTM": LSTM, "GRU": GRU, "Encoder": Encoder, "EncoderSW": Encoder_self_weighting}
+    model_types = {"LSTM": LSTM, "GRU": GRU, "Encoder": Encoder, "EncoderSW": Encoder_self_weighting, "EncoderCONV": EncoderCOVN}
     return model_types[t](**params[t])
 
 
