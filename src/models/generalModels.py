@@ -28,9 +28,10 @@ class ModelInfo:
         """Print model information"""
         total_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         print(f"Total trainable parameters: {total_params}")
-
+       
         if layers:
             print("Layers:")
+            print(self.named_parameters())
             for name, param in self.named_parameters():
                 print(
                     f"Layer: {name}, Size: {param.size()}, Parameters: {param.numel()}, Device: {param.device}"
@@ -58,4 +59,3 @@ class outputRNN(nn.Module):
         """Forward pass"""
         logits = self.output_layers(x)  # (batch, classes)
         return logits
-
