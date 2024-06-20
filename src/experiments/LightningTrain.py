@@ -190,7 +190,7 @@ for split_number in range(splits):
         wandb_logger.experiment.config.update(config)
 
     pf = AdvancedProfiler(dirpath="./", filename="profile.txt")
-    trainer_params = {"max_epochs": epochs, "log_every_n_steps": 1, "fast_dev_run": True if args.test else False}
+    trainer_params = {"max_epochs": epochs, "log_every_n_steps": 15, "fast_dev_run": True if args.test else False}
 
     dataset_params = {
         "n_emb": n_emb,

@@ -150,6 +150,9 @@ class Encoder_self_weighting(LitModel):
         logits = self.linear_output(x_weights)
         logits = torch.squeeze(logits, dim=1)
 
+
+        # print()
+
         loss = F.cross_entropy(logits, y_targets)
         return logits, loss
 
