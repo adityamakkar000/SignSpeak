@@ -8,3 +8,6 @@ test.*
 /src/experiments/experiment.sh
 /old/*
 *.ipynb
+/lightning_logs/*
+/src/experiments/sever.py
+/src/experiments/client.py
