@@ -9,5 +9,5 @@ test.*
 /old/*
 *.ipynb
 /lightning_logs/*
-/src/experiments/sever.py
+/src/experiments/server.py
 /src/experiments/client.py
