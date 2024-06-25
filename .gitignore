@@ -1,2 +1,10 @@
 *.env
-/structures/data\ program/lightning_logs/*
+/src/experiments/lightning_logs/*
+/src/experiments/wandb/*
+/src/experiments/SignSpeak/*
+/VENV/*
+*.pyc
+test.*
+/src/experiments/experiment.sh
+/old/*
+*.ipynb
