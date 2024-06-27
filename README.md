@@ -1,10 +1,10 @@
-# SignSpeak: Time Series Classification for ASL Prediction
+# SignSpeak: Open-Source Time Series Classification for ASL Translation
 
 This repository contains the code and dataset for the paper "SignSpeak: Time Series Classification for ASL Prediction." Here is the [paper]().
 
 ## Overview
 
-**Abstract**: The lack of fluency in sign language remains a barrier to seamless communication for hearing and speech-impaired communities. In this work, we propose a low-cost real-time ASL-to-speech translation glove and an exhaustive training dataset of sign language patterns. We then benchmark this dataset with supervised learning models including LSTMs, GRUs and Transformers achieving 92\% accuracy. The SignSpeak dataset has 7200 samples encompassing 36 classes (A-Z, 1-10) and aims to capture realistic signing patterns by using five low-cost flex sensors to measure finger positions at each time step at 36 Hz. SignSpeak indicates the strong feasibility of a cost-effective and resource-efficient ASL translator on a standardized dataset.
+**Abstract**: The lack of fluency in sign language remains a barrier to seamless communication for hearing and speech-impaired communities. In this work, we propose a low-cost, real-time ASL-to-speech translation glove and an exhaustive training dataset of sign language patterns. We then benchmarked this dataset with supervised learning models, such as LSTMs, GRUs and Transformers, where our best model achieved 92\% accuracy. The SignSpeak dataset has 7200 samples encompassing 36 classes (A-Z, 1-10) and aims to capture realistic signing patterns by using five low-cost flex sensors to measure finger positions at each time step at 36 Hz. Our open-source dataset, models and glove designs, provide an accurate and efficient ASL translator while maintaining cost-effectiveness, establishing a framework for future work to build on.  
 
 ## Data Glove
 
