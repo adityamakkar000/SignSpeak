@@ -16,9 +16,12 @@ All code for glove setup and data collection can be found at ``src/dataCollectio
 
 Below is the schematic and completed glove.
 
-<img src="images/EE_schem.jpg" alt="Data Glove Diagram" height="800">
 
-![Completed Glove](images/Gloves.png)
+
+<p align="center">
+  <img src="images/Schematic.png" alt="Data Glove Diagram 1", height="600">
+  <img src="images/Gloves.png" alt="Data Glove Diagram 2", height="400">
+</div>
 
 ## Key Features
 
