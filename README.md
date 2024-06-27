@@ -49,7 +49,7 @@ All models can be found in ``` src/models/ ```
 3. **Install Dependencies**
 
     ```bash
-    pip install -r requirements.txt
+    pip install -r req.txt
     ```
 4. **Run the model**
      Run the models using the following bash command inside of the ```src/experiments/``` or use the training scripts found in the directory
