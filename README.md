@@ -76,4 +76,4 @@ For any queries, please contact:
 
 ## Acknowledgement
 
-We thank University of Waterloo PhD Liam Hebert for providing invaluable guidance and unwavering support throughout the course of the SignSpeak project. 
+We thank University of Waterloo PhD Liam Hebert for providing invaluable guidance and unwavering support throughout the course of the SignSpeak. 
