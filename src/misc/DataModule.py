@@ -57,7 +57,7 @@ class ASLDataModule(L.LightningDataModule, Dataset):
         n_emb,
         batch_size,
         shuffle=True,
-        dir="./data/fullDataset.csv",
+        dir="./data/data.csv",
     ):
         super().__init__()
 
