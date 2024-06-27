@@ -70,10 +70,10 @@ All models can be found in ``` src/models/ ```
 
 For any queries, please contact:
 
-    Aditya Makkar: adityamakkar000@gmail.com
-    Divya Makkar: divyamakkar000@gmail.com
-    Aarav Patel: aaravp0905@gmail.com
+    Aditya Makkar: aditya.makkar@uwaterloo.ca
+    Divya Makkar: divya.makkar@uwaterloo.ca
+    Aarav Patel: aarav.patel@uwaterloo.ca
 
 ## Acknowledgement
 
-We thank University of Waterloo PhD Liam Hebert for providing invaluable guidance and unwavering support throughout the course of the SignSpeak. 
+We thank University of Waterloo PhD Liam Hebert for providing invaluable guidance and unwavering support throughout the course of SignSpeak. 
