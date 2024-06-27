@@ -12,11 +12,9 @@ The glove uses
 - **Flex Sensors**: Five flex sensors are integrated into the glove, one for each finger. These sensors measure the bend of each finger.
 - **Microcontroller**: An Arudino MEGA 2560 processes the signals from the flex sensors and sends the data verial serial ouput to a database.
 
-All code for glove setup and data collection can be found at ``src/dataCollection```
+All code for glove setup and data collection can be found at ```src/dataCollection```
 
 Below is the schematic and completed glove.
-
-
 
 <p align="center">
   <img src="images/Schematic.png" alt="Data Glove Diagram 1", height="600">
