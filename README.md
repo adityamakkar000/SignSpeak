@@ -52,7 +52,7 @@ All models can be found in ``` src/models/ ```
     pip install -r requirements.txt
     ```
 4. **Run the model**
-     Run the models using the following bash command inside of the src/experiments/ or use the training scripts found in the directory
+     Run the models using the following bash command inside of the ```src/experiments/``` or use the training scripts found in the directory
     ```bash
     python LightningTrain.py \
           -layers $layers \
