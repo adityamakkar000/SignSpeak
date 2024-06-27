@@ -73,3 +73,7 @@ For any queries, please contact:
     Aditya Makkar: adityamakkar000@gmail.com
     Divya Makkar: divyamakkar000@gmail.com
     Aarav Patel: aaravp0905@gmail.com
+
+## Acknowledgement
+
+We thank University of Waterloo PhD Liam Hebert for providing invaluable guidance and unwavering support throughout the course of the SignSpeak project. 
