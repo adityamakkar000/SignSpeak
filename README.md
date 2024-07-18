@@ -1,6 +1,6 @@
 # SignSpeak: Open-Source Time Series Classification for ASL Translation
 
-This repository contains the code and dataset for the paper "SignSpeak: Time Series Classification for ASL Prediction." Here is the [paper]().
+This repository contains the code and dataset for the paper "SignSpeak: Time Series Classification for ASL Prediction." Here is the [paper](https://arxiv.org/pdf/2407.12020).
 
 ## Overview
 
