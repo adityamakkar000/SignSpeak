@@ -14,6 +14,9 @@ class ModelInfo:
         TN = np.sum(np.sum(cm, axis=0)) - (
             np.sum(cm, axis=0) + np.sum(cm, axis=1) - np.diag(cm)
         )
+       
+
+
         FP = np.sum(cm, axis=0) - np.diag(
             cm
         )  # False Positives are the sum of the column minus the diagonal
@@ -28,7 +31,7 @@ class ModelInfo:
         """Print model information"""
         total_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         print(f"Total trainable parameters: {total_params}")
-       
+
         if layers:
             print("Layers:")
             print(self.named_parameters())

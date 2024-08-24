@@ -8,7 +8,7 @@ epochs=5
 
 # General Model params
 
-model=""
+model="LSTM" # change to GRU for GRU runs
 hidden_size=32
 
 # RNN params
@@ -42,8 +42,7 @@ for lr in 0.01 0.001 0.0001
           -batch_size $batch_size \
           -epochs $epochs \
           $dense_layer_arg \
-          -dense_size $dense_size \
-          -description $description \
+          # -description $description \
           -project_name $project_name
     done
 done

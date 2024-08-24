@@ -37,24 +37,3 @@ for model in "Encoder"; do
     done
   done
 done
-
-layers=$l
-
-    if [ "$dense_layer" = true ]; then
-      dense_layer_arg="-dense_layer"
-    else
-      dense_layer_arg=""
-    fi
-
-    description="EncoderfixedLR_Sweep"
-
-    python LightningTrain.py \
-      -layers $layers \
-      -model $model \
-      -hidden_size $hidden_size \
-      -lr $lr \
-      -time_steps $time_steps \
-      -batch_size $batch_size \
-      -epochs $epochs \
-      -number_heads $number_heads \
-      # -description $description # Uncomment to save model with description
