@@ -116,7 +116,7 @@ class ASLDataModule(L.LightningDataModule, Dataset):
         x_padding = np.array(
             [
                 np.pad(
-                    i, (0, self.time_steps - len(i)), "constant", constant_values=1.0
+                    i, (self.time_steps - len(i), 0), "constant", constant_values=1.0
                 )
                 for i in x_lengths
             ]
@@ -127,7 +127,7 @@ class ASLDataModule(L.LightningDataModule, Dataset):
             [
                 np.pad(
                     i,
-                    (0, self.time_steps * 5 - len(i)),
+                    (self.time_steps * 5 - len(i), 0),
                     "constant",
                     constant_values=0.0,
                 )
