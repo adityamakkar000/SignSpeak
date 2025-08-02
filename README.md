@@ -76,6 +76,20 @@ For any queries, please contact:
     Divya Makkar: divya.makkar@uwaterloo.ca
     Aarav Patel: aarav.patel@uwaterloo.ca
 
+## Citation 
+
+```
+@misc{makkar2024signspeakopensourcetimeseries,
+      title={SignSpeak: Open-Source Time Series Classification for ASL Translation}, 
+      author={Aditya Makkar and Divya Makkar and Aarav Patel and Liam Hebert},
+      year={2024},
+      eprint={2407.12020},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2407.12020}, 
+}
+```
+
 ## Acknowledgement
 
 We thank University of Waterloo PhD Liam Hebert for providing invaluable guidance and unwavering support throughout the course of SignSpeak. 
